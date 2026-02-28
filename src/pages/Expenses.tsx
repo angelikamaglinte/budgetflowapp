@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { format } from 'date-fns'
+import { format, parse } from 'date-fns'
 import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
@@ -30,22 +30,35 @@ export default function Expenses() {
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [periodFilter, setPeriodFilter] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
+  // Build sorted list of unique months that have expenses
+  const periodOptions = useMemo(() => {
+    const months = new Set(expenses.map((e) => e.date.slice(0, 7))) // "YYYY-MM"
+    return Array.from(months).sort((a, b) => b.localeCompare(a))
+  }, [expenses])
+
+  // Expenses filtered by period only (used for summary cards)
+  const periodExpenses = useMemo(() => {
+    if (!periodFilter) return expenses
+    return expenses.filter((e) => e.date.slice(0, 7) === periodFilter)
+  }, [expenses, periodFilter])
+
   const tabCounts = useMemo(() => ({
-    all: expenses.length,
-    business: expenses.filter((e) => e.type === 'business').length,
-    personal: expenses.filter((e) => e.type === 'personal').length,
-  }), [expenses])
+    all: periodExpenses.length,
+    business: periodExpenses.filter((e) => e.type === 'business').length,
+    personal: periodExpenses.filter((e) => e.type === 'personal').length,
+  }), [periodExpenses])
 
   const tabTotals = useMemo(() => ({
-    all: expenses.reduce((s, e) => s + e.amount, 0),
-    business: expenses.filter((e) => e.type === 'business').reduce((s, e) => s + e.amount, 0),
-    personal: expenses.filter((e) => e.type === 'personal').reduce((s, e) => s + e.amount, 0),
-  }), [expenses])
+    all: periodExpenses.reduce((s, e) => s + e.amount, 0),
+    business: periodExpenses.filter((e) => e.type === 'business').reduce((s, e) => s + e.amount, 0),
+    personal: periodExpenses.filter((e) => e.type === 'personal').reduce((s, e) => s + e.amount, 0),
+  }), [periodExpenses])
 
   const filtered = useMemo(() => {
-    return expenses.filter((exp) => {
+    return periodExpenses.filter((exp) => {
       const matchTab = activeTab === 'all' || exp.type === activeTab
       const matchSearch =
         exp.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -53,7 +66,7 @@ export default function Expenses() {
       const matchCat = categoryFilter ? exp.category === categoryFilter : true
       return matchTab && matchSearch && matchCat
     })
-  }, [expenses, activeTab, search, categoryFilter])
+  }, [periodExpenses, activeTab, search, categoryFilter])
 
   const totalFiltered = filtered.reduce((sum, e) => sum + e.amount, 0)
 
@@ -143,6 +156,18 @@ export default function Expenses() {
           />
         </div>
         <select
+          value={periodFilter}
+          onChange={(e) => setPeriodFilter(e.target.value)}
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">All time</option>
+          {periodOptions.map((p) => (
+            <option key={p} value={p}>
+              {format(parse(p, 'yyyy-MM', new Date()), 'MMMM yyyy')}
+            </option>
+          ))}
+        </select>
+        <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -152,7 +177,7 @@ export default function Expenses() {
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
-        {filtered.length > 0 && (search || categoryFilter) && (
+        {filtered.length > 0 && (search || categoryFilter || periodFilter) && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 shrink-0">
             <span className="text-gray-400">Total:</span>
             <span className="font-semibold text-gray-900">
@@ -176,9 +201,9 @@ export default function Expenses() {
               <Plus className="w-6 h-6 text-blue-400" />
             </div>
             <p className="text-gray-500 text-sm">
-              {search || categoryFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
+              {search || categoryFilter || periodFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
             </p>
-            {!search && !categoryFilter && (
+            {!search && !categoryFilter && !periodFilter && (
               <button
                 onClick={() => { setEditTarget(null); setFormOpen(true) }}
                 className="text-blue-600 text-sm font-medium hover:underline"
