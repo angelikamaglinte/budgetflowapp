@@ -76,7 +76,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('invoice_number')}
                 placeholder="INV-001"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.invoice_number && <p className="mt-1 text-xs text-red-600">{errors.invoice_number.message}</p>}
             </div>
@@ -84,7 +84,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
               <select
                 {...register('status')}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
                 <option value="pending">Pending</option>
                 <option value="paid">Paid</option>
@@ -98,7 +98,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
             <input
               {...register('client_name')}
               placeholder="Acme Corp"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.client_name && <p className="mt-1 text-xs text-red-600">{errors.client_name.message}</p>}
           </div>
@@ -109,7 +109,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               {...register('client_email')}
               type="email"
               placeholder="client@example.com"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.client_email && <p className="mt-1 text-xs text-red-600">{errors.client_email.message}</p>}
           </div>
@@ -121,7 +121,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               type="number"
               step="0.01"
               placeholder="0.00"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
           </div>
@@ -132,7 +132,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('issue_date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.issue_date && <p className="mt-1 text-xs text-red-600">{errors.issue_date.message}</p>}
             </div>
@@ -141,7 +141,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('due_date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               {...register('notes')}
               rows={2}
               placeholder="Project details, payment terms..."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -167,7 +167,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
             >
               {isSubmitting ? 'Saving...' : initial ? 'Save changes' : 'Create invoice'}
             </button>

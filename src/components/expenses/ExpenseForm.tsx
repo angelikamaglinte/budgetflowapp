@@ -113,7 +113,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
               <input
                 {...register('date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date.message}</p>}
             </div>
@@ -124,7 +124,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
             </div>
@@ -135,7 +135,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <input
               {...register('title')}
               placeholder="e.g. Adobe Creative Cloud"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
           </div>
@@ -145,7 +145,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <input
               {...register('vendor')}
               placeholder="e.g. Adobe Inc."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -153,7 +153,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
             <select
               {...register('category')}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">Select category</option>
               {EXPENSE_CATEGORIES.map((cat) => (
@@ -169,7 +169,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
               {...register('notes')}
               rows={2}
               placeholder="Any additional notes..."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -184,7 +184,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
             >
               {isSubmitting ? 'Saving...' : initial ? 'Save changes' : 'Add expense'}
             </button>

@@ -33,7 +33,7 @@ export const EXPENSE_CATEGORIES = [
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Software: 'bg-purple-100 text-purple-700',
+  Software: 'bg-blue-100 text-blue-700',
   Office: 'bg-blue-100 text-blue-700',
   Transport: 'bg-sky-100 text-sky-700',
   'Food & Dining': 'bg-green-100 text-green-700',

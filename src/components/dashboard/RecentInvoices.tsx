@@ -21,7 +21,7 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
         </div>
         <Link
           to="/invoices"
-          className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1 transition"
+          className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition"
         >
           View all <ArrowRight className="w-3 h-3" />
         </Link>

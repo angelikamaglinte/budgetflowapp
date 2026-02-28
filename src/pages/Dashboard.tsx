@@ -73,8 +73,8 @@ export default function Dashboard() {
         <StatCard
           label="Total Expenses"
           value={formatMoney(stats.totalExpenses)}
-          icon={<TrendingDown className="w-5 h-5 text-purple-600" />}
-          iconBg="bg-purple-50"
+          icon={<TrendingDown className="w-5 h-5 text-blue-600" />}
+          iconBg="bg-blue-50"
         />
         <StatCard
           label="Net Profit"

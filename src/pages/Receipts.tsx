@@ -67,7 +67,7 @@ export default function Receipts() {
       action={
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-medium transition"
+          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
         >
           <Upload className="w-4 h-4" /> Upload Receipt
         </button>
@@ -91,16 +91,16 @@ export default function Receipts() {
         className={`
           mb-6 border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all
           ${dragOver
-            ? 'border-purple-400 bg-purple-50'
-            : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/40'}
+            ? 'border-blue-400 bg-blue-50'
+            : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'}
         `}
       >
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${dragOver ? 'bg-purple-100' : 'bg-gray-100'}`}>
-            <Upload className={`w-6 h-6 ${dragOver ? 'text-purple-600' : 'text-gray-400'}`} />
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${dragOver ? 'bg-blue-100' : 'bg-gray-100'}`}>
+            <Upload className={`w-6 h-6 ${dragOver ? 'text-blue-600' : 'text-gray-400'}`} />
           </div>
           {uploading ? (
-            <p className="text-sm text-purple-600 font-medium">Uploading...</p>
+            <p className="text-sm text-blue-600 font-medium">Uploading...</p>
           ) : (
             <>
               <p className="text-sm font-medium text-gray-700">
@@ -188,7 +188,7 @@ export default function Receipts() {
                 <select
                   value={receipt.expense_id ?? ''}
                   onChange={(e) => void handleLinkChange(receipt.id, e.target.value)}
-                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
                   title="Link to expense"
                 >
                   <option value="">Link to expense...</option>

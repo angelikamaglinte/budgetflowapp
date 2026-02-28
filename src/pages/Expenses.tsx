@@ -96,7 +96,7 @@ export default function Expenses() {
           </button>
           <button
             onClick={() => { setEditTarget(null); setFormOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-medium transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
           >
             <Plus className="w-4 h-4" /> Add Expense
           </button>
@@ -112,13 +112,13 @@ export default function Expenses() {
             className={cn(
               'text-left p-4 rounded-2xl border transition-all',
               activeTab === tab.id
-                ? 'bg-white border-purple-200 shadow-[0_1px_3px_rgba(0,0,0,0.07)] ring-1 ring-purple-200'
+                ? 'bg-white border-blue-200 shadow-[0_1px_3px_rgba(0,0,0,0.07)] ring-1 ring-blue-200'
                 : 'bg-white border-gray-100 hover:border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
             )}
           >
             <div className={cn(
               'flex items-center gap-2 text-sm font-medium mb-2',
-              activeTab === tab.id ? 'text-purple-700' : 'text-gray-500'
+              activeTab === tab.id ? 'text-blue-700' : 'text-gray-500'
             )}>
               {tab.icon}
               {tab.label}
@@ -139,13 +139,13 @@ export default function Expenses() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search expenses..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">All categories</option>
           {EXPENSE_CATEGORIES.map((cat) => (
@@ -172,8 +172,8 @@ export default function Expenses() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center">
-              <Plus className="w-6 h-6 text-purple-400" />
+            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
+              <Plus className="w-6 h-6 text-blue-400" />
             </div>
             <p className="text-gray-500 text-sm">
               {search || categoryFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
@@ -181,7 +181,7 @@ export default function Expenses() {
             {!search && !categoryFilter && (
               <button
                 onClick={() => { setEditTarget(null); setFormOpen(true) }}
-                className="text-purple-600 text-sm font-medium hover:underline"
+                className="text-blue-600 text-sm font-medium hover:underline"
               >
                 Add expense
               </button>
@@ -237,7 +237,7 @@ export default function Expenses() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => openEdit(exp)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>

@@ -52,7 +52,7 @@ export default function Signup() {
           </p>
           <button
             onClick={() => void navigate('/login')}
-            className="text-purple-600 font-medium text-sm hover:underline"
+            className="text-blue-600 font-medium text-sm hover:underline"
           >
             Back to sign in
           </button>
@@ -63,7 +63,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-purple-600 to-purple-800 flex-col justify-between p-12">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 flex-col justify-between p-12">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-white" />
@@ -74,7 +74,7 @@ export default function Signup() {
           <h2 className="text-4xl font-bold text-white leading-tight mb-4">
             Start managing your<br />finances today.
           </h2>
-          <p className="text-purple-200 text-lg">
+          <p className="text-blue-200 text-lg">
             Join and take control of your business cash flow as an independent contractor.
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#f8f7ff]">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-white" />
             </div>
             <span className="font-semibold text-gray-900">BudgetFlow</span>
@@ -112,7 +112,7 @@ export default function Signup() {
                 {...register('email')}
                 type="email"
                 placeholder="you@example.com"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
               {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
             </div>
@@ -124,7 +124,7 @@ export default function Signup() {
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Min. 8 characters"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition pr-10"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10"
                 />
                 <button
                   type="button"
@@ -143,7 +143,7 @@ export default function Signup() {
                 {...register('confirmPassword')}
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
@@ -153,7 +153,7 @@ export default function Signup() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-medium rounded-xl transition text-sm"
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium rounded-xl transition text-sm"
             >
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
@@ -161,7 +161,7 @@ export default function Signup() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/login" className="text-purple-600 font-medium hover:underline">
+            <Link to="/login" className="text-blue-600 font-medium hover:underline">
               Sign in
             </Link>
           </p>
