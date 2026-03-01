@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { startOfMonth, endOfMonth } from 'date-fns'
 import { DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -9,6 +8,7 @@ import { IncomeExpenseChart } from '@/components/dashboard/IncomeExpenseChart'
 import { RecentInvoices } from '@/components/dashboard/RecentInvoices'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
+import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 
 function formatMoney(n: number) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -17,34 +17,30 @@ function formatMoney(n: number) {
 export default function Dashboard() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
+  const { periodFilter } = usePeriod()
 
-  const now = new Date()
-  const monthStart = startOfMonth(now)
-  const monthEnd = endOfMonth(now)
+  // Fall back to current month when no filter is selected
+  const effectiveFilter = periodFilter || new Date().toISOString().slice(0, 7)
 
   const stats = useMemo(() => {
-    const thisMonthExp = expenses.filter((e) => {
-      const d = new Date(e.date)
-      return d >= monthStart && d <= monthEnd
-    })
-    const totalExpenses = thisMonthExp.reduce((sum, e) => sum + e.amount, 0)
+    const filteredExp = expenses.filter((e) => matchesPeriod(e.date, effectiveFilter))
+    const filteredInv = invoices.filter((inv) => matchesPeriod(inv.issue_date, effectiveFilter))
 
-    const thisMonthInv = invoices.filter((inv) => {
-      const d = new Date(inv.issue_date)
-      return d >= monthStart && d <= monthEnd
-    })
-    const totalIncome = thisMonthInv
+    const totalExpenses = filteredExp.reduce((sum, e) => sum + e.amount, 0)
+    const totalIncome = filteredInv
       .filter((inv) => inv.status === 'paid')
       .reduce((sum, inv) => sum + inv.amount, 0)
-
-    const pending = thisMonthInv
+    const pending = filteredInv
       .filter((inv) => inv.status === 'pending')
       .reduce((sum, inv) => sum + inv.amount, 0)
-
     const netProfit = totalIncome - totalExpenses
 
     return { totalExpenses, totalIncome, pending, netProfit }
-  }, [expenses, invoices, monthStart, monthEnd])
+  }, [expenses, invoices, effectiveFilter])
+
+  const subtitle = periodFilter
+    ? `Financial overview for ${periodLabel(periodFilter)}`
+    : `Financial overview for ${periodLabel(effectiveFilter)}`
 
   const isLoading = loadingExp || loadingInv
 
@@ -61,7 +57,7 @@ export default function Dashboard() {
   }
 
   return (
-    <AppLayout title="Dashboard" subtitle="Your financial overview for this month">
+    <AppLayout title="Dashboard" subtitle={subtitle}>
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard

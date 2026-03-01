@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { format, parse } from 'date-fns'
+import { format } from 'date-fns'
 import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
@@ -10,6 +10,7 @@ import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
 import type { Expense } from '@/types'
 import { cn } from '@/lib/utils'
+import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
 type TabType = 'all' | 'business' | 'personal'
 
@@ -25,24 +26,17 @@ export default function Expenses() {
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
 
+  const { periodFilter } = usePeriod()
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [periodFilter, setPeriodFilter] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  // Build sorted list of unique months that have expenses
-  const periodOptions = useMemo(() => {
-    const months = new Set(expenses.map((e) => e.date.slice(0, 7))) // "YYYY-MM"
-    return Array.from(months).sort((a, b) => b.localeCompare(a))
-  }, [expenses])
-
-  // Expenses filtered by period only (used for summary cards)
+  // Expenses filtered by global period (used for summary cards)
   const periodExpenses = useMemo(() => {
-    if (!periodFilter) return expenses
-    return expenses.filter((e) => e.date.slice(0, 7) === periodFilter)
+    return expenses.filter((e) => matchesPeriod(e.date, periodFilter))
   }, [expenses, periodFilter])
 
   const tabCounts = useMemo(() => ({
@@ -156,18 +150,6 @@ export default function Expenses() {
           />
         </div>
         <select
-          value={periodFilter}
-          onChange={(e) => setPeriodFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">All time</option>
-          {periodOptions.map((p) => (
-            <option key={p} value={p}>
-              {format(parse(p, 'yyyy-MM', new Date()), 'MMMM yyyy')}
-            </option>
-          ))}
-        </select>
-        <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -177,7 +159,7 @@ export default function Expenses() {
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
-        {filtered.length > 0 && (search || categoryFilter || periodFilter) && (
+        {filtered.length > 0 && (search || categoryFilter) && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 shrink-0">
             <span className="text-gray-400">Total:</span>
             <span className="font-semibold text-gray-900">
@@ -201,9 +183,9 @@ export default function Expenses() {
               <Plus className="w-6 h-6 text-blue-400" />
             </div>
             <p className="text-gray-500 text-sm">
-              {search || categoryFilter || periodFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
+              {search || categoryFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
             </p>
-            {!search && !categoryFilter && !periodFilter && (
+            {!search && !categoryFilter && (
               <button
                 onClick={() => { setEditTarget(null); setFormOpen(true) }}
                 className="text-blue-600 text-sm font-medium hover:underline"

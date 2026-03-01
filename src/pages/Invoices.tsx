@@ -8,6 +8,7 @@ import type { InvoiceFormValues } from '@/components/invoices/InvoiceForm'
 import { useInvoices, useAddInvoice, useUpdateInvoice, useDeleteInvoice } from '@/hooks/useInvoices'
 import { exportInvoices } from '@/lib/export'
 import type { Invoice } from '@/types'
+import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
 export default function Invoices() {
   const { data: invoices = [], isLoading } = useInvoices()
@@ -15,6 +16,7 @@ export default function Invoices() {
   const updateInvoice = useUpdateInvoice()
   const deleteInvoice = useDeleteInvoice()
 
+  const { periodFilter } = usePeriod()
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Invoice | null>(null)
   const [search, setSearch] = useState('')
@@ -23,13 +25,14 @@ export default function Invoices() {
 
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
+      const matchPeriod = matchesPeriod(inv.issue_date, periodFilter)
       const matchSearch =
         inv.client_name.toLowerCase().includes(search.toLowerCase()) ||
         inv.invoice_number.toLowerCase().includes(search.toLowerCase())
       const matchStatus = statusFilter ? inv.status === statusFilter : true
-      return matchSearch && matchStatus
+      return matchPeriod && matchSearch && matchStatus
     })
-  }, [invoices, search, statusFilter])
+  }, [invoices, periodFilter, search, statusFilter])
 
   const totalPaid = filtered
     .filter((i) => i.status === 'paid')

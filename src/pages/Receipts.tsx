@@ -6,6 +6,7 @@ import { useReceipts, useUploadReceipt, useDeleteReceipt } from '@/hooks/useRece
 import { useExpenses } from '@/hooks/useExpenses'
 import { useLinkReceiptToExpense } from '@/hooks/useReceipts'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 import type { Receipt } from '@/types'
 
 function isImage(filename: string) {
@@ -19,6 +20,9 @@ export default function Receipts() {
   const uploadReceipt = useUploadReceipt()
   const deleteReceipt = useDeleteReceipt()
   const linkReceipt = useLinkReceiptToExpense()
+
+  const { periodFilter } = usePeriod()
+  const filteredReceipts = receipts.filter((r) => matchesPeriod(r.uploaded_at, periodFilter))
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -125,13 +129,15 @@ export default function Receipts() {
             <div key={i} className="aspect-square bg-white rounded-2xl animate-pulse" />
           ))}
         </div>
-      ) : receipts.length === 0 ? (
+      ) : filteredReceipts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-400 text-sm">No receipts uploaded yet</p>
+          <p className="text-gray-400 text-sm">
+            {receipts.length === 0 ? 'No receipts uploaded yet' : 'No receipts for the selected period'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {receipts.map((receipt) => (
+          {filteredReceipts.map((receipt) => (
             <div
               key={receipt.id}
               className="group bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
