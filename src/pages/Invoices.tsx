@@ -52,7 +52,11 @@ export default function Invoices() {
   }
 
   async function markPaid(inv: Invoice) {
-    await updateInvoice.mutateAsync({ id: inv.id, status: 'paid' })
+    await updateInvoice.mutateAsync({
+      id: inv.id,
+      status: 'paid',
+      date_paid: new Date().toISOString().split('T')[0],
+    })
   }
 
   async function handleDelete(id: string) {
@@ -147,6 +151,7 @@ export default function Invoices() {
                 <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Client</th>
                 <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Issue Date</th>
                 <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Due Date</th>
+                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Date Paid</th>
                 <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Status</th>
                 <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
                 <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
@@ -169,6 +174,15 @@ export default function Invoices() {
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-500 hidden lg:table-cell">
                     {inv.due_date ? format(new Date(inv.due_date), 'MMM d, yyyy') : '—'}
+                  </td>
+                  <td className="px-4 py-4 hidden lg:table-cell">
+                    {inv.date_paid ? (
+                      <span className="text-sm text-green-600 font-medium">
+                        {format(new Date(inv.date_paid), 'MMM d, yyyy')}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-4">
                     <StatusBadge status={inv.status} />

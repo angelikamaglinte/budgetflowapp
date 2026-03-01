@@ -61,6 +61,7 @@ export interface Database {
           status: string
           issue_date: string
           due_date: string | null
+          date_paid: string | null
           notes: string | null
           created_at: string
         }
@@ -74,6 +75,7 @@ export interface Database {
           status?: string
           issue_date: string
           due_date?: string | null
+          date_paid?: string | null
           notes?: string | null
           created_at?: string
         }
@@ -87,6 +89,7 @@ export interface Database {
           status?: string
           issue_date?: string
           due_date?: string | null
+          date_paid?: string | null
           notes?: string | null
           created_at?: string
         }

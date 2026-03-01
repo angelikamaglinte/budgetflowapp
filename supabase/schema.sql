@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   status         TEXT        DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'overdue')),
   issue_date     DATE        NOT NULL,
   due_date       DATE,
+  date_paid      DATE,
   notes          TEXT,
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
@@ -110,6 +111,15 @@ CREATE POLICY "Users can delete their own receipts"
 -- ALTER TABLE expenses
 --   ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'business'
 --   CHECK (type IN ('business', 'personal'));
+-- ============================================================
+
+-- ============================================================
+-- Migration: add date_paid column to invoices
+-- Run this if you already have the invoices table created above.
+-- If running schema.sql fresh, the column is already included above.
+-- ============================================================
+-- ALTER TABLE invoices
+--   ADD COLUMN IF NOT EXISTS date_paid DATE;
 -- ============================================================
 
 -- ============================================================

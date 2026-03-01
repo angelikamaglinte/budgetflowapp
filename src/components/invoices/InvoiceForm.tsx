@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,7 @@ const invoiceSchema = z.object({
   status: z.enum(['pending', 'paid', 'overdue']),
   issue_date: z.string().min(1, 'Issue date is required'),
   due_date: z.string().optional(),
+  date_paid: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -27,7 +28,7 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormProps) {
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<InvoiceFormValues>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema) as Resolver<InvoiceFormValues>,
     defaultValues: {
       invoice_number: '',
@@ -37,9 +38,12 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
       status: 'pending',
       issue_date: new Date().toISOString().split('T')[0],
       due_date: '',
+      date_paid: '',
       notes: '',
     },
   })
+
+  const watchedStatus = useWatch({ control, name: 'status' })
 
   useEffect(() => {
     if (open) {
@@ -51,6 +55,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
         status: (initial?.status as 'pending' | 'paid' | 'overdue') ?? 'pending',
         issue_date: initial?.issue_date ?? new Date().toISOString().split('T')[0],
         due_date: initial?.due_date ?? '',
+        date_paid: initial?.date_paid ?? '',
         notes: initial?.notes ?? '',
       })
     }
@@ -145,6 +150,18 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               />
             </div>
           </div>
+
+          {watchedStatus === 'paid' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date Paid</label>
+              <input
+                {...register('date_paid')}
+                type="date"
+                className="w-full px-3 py-2.5 rounded-xl border border-green-300 bg-green-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-400">The date you actually received the money</p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes (optional)</label>
