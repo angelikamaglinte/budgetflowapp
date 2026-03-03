@@ -6,11 +6,13 @@ import { StatusBadge } from '@/components/invoices/StatusBadge'
 import { InvoiceForm } from '@/components/invoices/InvoiceForm'
 import type { InvoiceFormValues } from '@/components/invoices/InvoiceForm'
 import { useInvoices, useAddInvoice, useUpdateInvoice, useDeleteInvoice } from '@/hooks/useInvoices'
+import { useAuth } from '@/contexts/AuthContext'
 import { exportInvoices } from '@/lib/export'
 import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
 export default function Invoices() {
+  const { user } = useAuth()
   const { data: invoices = [], isLoading } = useInvoices()
   const addInvoice = useAddInvoice()
   const updateInvoice = useUpdateInvoice()
@@ -45,7 +47,7 @@ export default function Invoices() {
     if (editTarget) {
       await updateInvoice.mutateAsync({ id: editTarget.id, ...values })
     } else {
-      await addInvoice.mutateAsync(values)
+      await addInvoice.mutateAsync({ ...values, user_id: user!.id })
     }
     setFormOpen(false)
     setEditTarget(null)
