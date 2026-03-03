@@ -13,8 +13,8 @@ const invoiceSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
   status: z.enum(['pending', 'paid', 'overdue']),
   issue_date: z.string().min(1, 'Issue date is required'),
-  due_date: z.string().optional(),
-  date_paid: z.string().optional(),
+  due_date: z.string().optional().transform(v => v === '' ? undefined : v),
+  date_paid: z.string().optional().transform(v => v === '' ? undefined : v),
   notes: z.string().optional(),
 })
 
