@@ -27,7 +27,7 @@ export default function Invoices() {
 
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
-      const matchPeriod = matchesPeriod(inv.issue_date, periodFilter)
+      const matchPeriod = matchesPeriod(inv.date_paid ?? inv.issue_date, periodFilter)
       const matchSearch =
         inv.client_name.toLowerCase().includes(search.toLowerCase()) ||
         inv.invoice_number.toLowerCase().includes(search.toLowerCase())
