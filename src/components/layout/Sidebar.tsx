@@ -6,6 +6,7 @@ import {
   Receipt,
   TrendingUp,
   LogOut,
+  NotebookText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/expenses', label: 'Expenses', icon: CreditCard },
   { to: '/invoices', label: 'Invoices', icon: FileText },
   { to: '/receipts', label: 'Receipts', icon: Receipt },
+  { to: '/notes', label: 'Notes', icon: NotebookText },
 ]
 
 export function Sidebar() {

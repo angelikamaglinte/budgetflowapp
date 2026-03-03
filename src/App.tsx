@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard'
 import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
 import Receipts from '@/pages/Receipts'
+import Notes from '@/pages/Notes'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Receipts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notes"
+              element={
+                <ProtectedRoute>
+                  <Notes />
                 </ProtectedRoute>
               }
             />
