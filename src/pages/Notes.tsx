@@ -1,16 +1,5 @@
 import { AppLayout } from '@/components/layout/AppLayout'
 
-const sections = [
-  {
-    title: 'Payment Schedule',
-    color: 'blue',
-    items: [
-      { label: 'Satori BLP', value: 'Invoiced end of month → Paid quickly (same month / early next month)' },
-      { label: '360 Integrations', value: 'Invoiced end of month → Paid after 30 days (next month)' },
-    ],
-  },
-]
-
 export default function Notes() {
   return (
     <AppLayout title="Notes" subtitle="Your contractor budgeting system reference">
