@@ -19,12 +19,9 @@ export default function Dashboard() {
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
   const { periodFilter } = usePeriod()
 
-  // Fall back to current month when no filter is selected
-  const effectiveFilter = periodFilter || new Date().toISOString().slice(0, 7)
-
   const stats = useMemo(() => {
-    const filteredExp = expenses.filter((e) => matchesPeriod(e.date, effectiveFilter))
-    const filteredInv = invoices.filter((inv) => matchesPeriod(inv.issue_date, effectiveFilter))
+    const filteredExp = expenses.filter((e) => matchesPeriod(e.date, periodFilter))
+    const filteredInv = invoices.filter((inv) => matchesPeriod(inv.date_paid ?? inv.issue_date, periodFilter))
 
     const totalExpenses = filteredExp.reduce((sum, e) => sum + e.amount, 0)
     const totalIncome = filteredInv
@@ -36,11 +33,11 @@ export default function Dashboard() {
     const netProfit = totalIncome - totalExpenses
 
     return { totalExpenses, totalIncome, pending, netProfit }
-  }, [expenses, invoices, effectiveFilter])
+  }, [expenses, invoices, periodFilter])
 
   const subtitle = periodFilter
     ? `Financial overview for ${periodLabel(periodFilter)}`
-    : `Financial overview for ${periodLabel(effectiveFilter)}`
+    : 'Financial overview for all time'
 
   const isLoading = loadingExp || loadingInv
 
