@@ -30,7 +30,7 @@ export default function Dashboard() {
     const totalIncome = filteredInv
       .filter((inv) => inv.status === 'paid')
       .reduce((sum, inv) => sum + inv.amount, 0)
-    const pending = filteredInv
+    const pending = invoices
       .filter((inv) => inv.status === 'pending')
       .reduce((sum, inv) => sum + inv.amount, 0)
     const netProfit = totalIncome - totalExpenses
