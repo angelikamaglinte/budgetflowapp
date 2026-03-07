@@ -42,6 +42,7 @@ export function useUploadReceipt() {
       const { data, error: dbError } = await supabase
         .from('receipts')
         .insert({
+          user_id: userId,
           filename: file.name,
           storage_path: storagePath,
           public_url: urlData.publicUrl,
