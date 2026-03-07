@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 import type { Expense } from '@/types'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { parseLocalDate } from '@/lib/utils'
 
 interface SpendingChartProps {
   expenses: Expense[]
@@ -26,7 +27,7 @@ function buildMonthlyData(expenses: Expense[]) {
   })
 
   for (const exp of expenses) {
-    const d = new Date(exp.date)
+    const d = parseLocalDate(exp.date)
     const bucket = months.find((m) => d >= m.start && d <= m.end)
     if (bucket) bucket.amount += exp.amount
   }

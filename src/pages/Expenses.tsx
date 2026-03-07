@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
 import type { Expense } from '@/types'
-import { cn } from '@/lib/utils'
+import { cn, parseLocalDate } from '@/lib/utils'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
 type TabType = 'all' | 'business' | 'personal'
@@ -215,7 +215,7 @@ export default function Expenses() {
               {filtered.map((exp) => (
                 <tr key={exp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {format(new Date(exp.date), 'MMM d, yyyy')}
+                    {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                   </td>
                   <td className="px-4 py-4">
                     <p className="text-sm font-medium text-gray-900">{exp.title}</p>

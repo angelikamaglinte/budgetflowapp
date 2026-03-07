@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import type { Invoice, InvoiceStatus } from '@/types'
 import { STATUS_COLORS } from '@/types'
+import { parseLocalDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface RecentInvoicesProps {
@@ -36,7 +37,7 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{inv.client_name}</p>
                 <p className="text-xs text-gray-400">
-                  {inv.invoice_number} · {format(new Date(inv.issue_date), 'MMM d, yyyy')}
+                  {inv.invoice_number} · {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
                 </p>
               </div>
               <div className="flex items-center gap-3 ml-4">

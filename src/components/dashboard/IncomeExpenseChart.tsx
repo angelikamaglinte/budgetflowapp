@@ -10,6 +10,7 @@ import {
 } from 'recharts'
 import type { Expense, Invoice } from '@/types'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { parseLocalDate } from '@/lib/utils'
 
 interface IncomeExpenseChartProps {
   expenses: Expense[]
@@ -23,11 +24,11 @@ function buildData(expenses: Expense[], invoices: Invoice[]) {
     const end = endOfMonth(d)
 
     const income = invoices
-      .filter((inv) => inv.status === 'paid' && new Date(inv.issue_date) >= start && new Date(inv.issue_date) <= end)
+      .filter((inv) => inv.status === 'paid' && parseLocalDate(inv.issue_date) >= start && parseLocalDate(inv.issue_date) <= end)
       .reduce((sum, inv) => sum + inv.amount, 0)
 
     const spent = expenses
-      .filter((exp) => new Date(exp.date) >= start && new Date(exp.date) <= end)
+      .filter((exp) => parseLocalDate(exp.date) >= start && parseLocalDate(exp.date) <= end)
       .reduce((sum, exp) => sum + exp.amount, 0)
 
     return { month: format(d, 'MMM'), income, expenses: spent }

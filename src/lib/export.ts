@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx'
 import { format } from 'date-fns'
 import type { Expense, Invoice } from '@/types'
+import { parseLocalDate } from '@/lib/utils'
 
 function saveWorkbook(wb: XLSX.WorkBook, filename: string) {
   XLSX.writeFile(wb, filename)
@@ -10,7 +11,7 @@ function saveWorkbook(wb: XLSX.WorkBook, filename: string) {
 
 export function exportExpenses(expenses: Expense[], label = 'All') {
   const rows = expenses.map((e) => ({
-    Date: format(new Date(e.date), 'MM/dd/yyyy'),
+    Date: format(parseLocalDate(e.date), 'MM/dd/yyyy'),
     Title: e.title,
     Vendor: e.vendor ?? '',
     Category: e.category,
@@ -46,8 +47,8 @@ export function exportInvoices(invoices: Invoice[]) {
     'Invoice #': inv.invoice_number,
     Client: inv.client_name,
     'Client Email': inv.client_email ?? '',
-    'Issue Date': format(new Date(inv.issue_date), 'MM/dd/yyyy'),
-    'Due Date': inv.due_date ? format(new Date(inv.due_date), 'MM/dd/yyyy') : '',
+    'Issue Date': format(parseLocalDate(inv.issue_date), 'MM/dd/yyyy'),
+    'Due Date': inv.due_date ? format(parseLocalDate(inv.due_date), 'MM/dd/yyyy') : '',
     Status: inv.status.charAt(0).toUpperCase() + inv.status.slice(1),
     Amount: inv.amount,
     Notes: inv.notes ?? '',
@@ -79,14 +80,14 @@ export function exportTaxSummary(expenses: Expense[], invoices: Invoice[], year?
   const targetYear = year ?? new Date().getFullYear()
   const wb = XLSX.utils.book_new()
 
-  const yearExpenses = expenses.filter((e) => new Date(e.date).getFullYear() === targetYear)
+  const yearExpenses = expenses.filter((e) => parseLocalDate(e.date).getFullYear() === targetYear)
   const yearInvoices = invoices.filter((i) => new Date(i.issue_date).getFullYear() === targetYear)
 
   // Sheet 1: Business Expenses
   const bizRows = yearExpenses
     .filter((e) => e.type === 'business')
     .map((e) => ({
-      Date: format(new Date(e.date), 'MM/dd/yyyy'),
+      Date: format(parseLocalDate(e.date), 'MM/dd/yyyy'),
       Title: e.title,
       Vendor: e.vendor ?? '',
       Category: e.category,
@@ -105,7 +106,7 @@ export function exportTaxSummary(expenses: Expense[], invoices: Invoice[], year?
   const perRows = yearExpenses
     .filter((e) => e.type === 'personal')
     .map((e) => ({
-      Date: format(new Date(e.date), 'MM/dd/yyyy'),
+      Date: format(parseLocalDate(e.date), 'MM/dd/yyyy'),
       Title: e.title,
       Vendor: e.vendor ?? '',
       Category: e.category,
@@ -124,8 +125,8 @@ export function exportTaxSummary(expenses: Expense[], invoices: Invoice[], year?
   const invRows = yearInvoices.map((inv) => ({
     'Invoice #': inv.invoice_number,
     Client: inv.client_name,
-    'Issue Date': format(new Date(inv.issue_date), 'MM/dd/yyyy'),
-    'Due Date': inv.due_date ? format(new Date(inv.due_date), 'MM/dd/yyyy') : '',
+    'Issue Date': format(parseLocalDate(inv.issue_date), 'MM/dd/yyyy'),
+    'Due Date': inv.due_date ? format(parseLocalDate(inv.due_date), 'MM/dd/yyyy') : '',
     Status: inv.status.charAt(0).toUpperCase() + inv.status.slice(1),
     Amount: inv.amount,
   }))
@@ -145,13 +146,13 @@ export function exportTaxSummary(expenses: Expense[], invoices: Invoice[], year?
   const months = Array.from({ length: 12 }, (_, i) => {
     const label = new Date(targetYear, i, 1).toLocaleString('default', { month: 'long' })
     const income = yearInvoices
-      .filter((inv) => inv.status === 'paid' && new Date(inv.issue_date).getMonth() === i)
+      .filter((inv) => inv.status === 'paid' && parseLocalDate(inv.issue_date).getMonth() === i)
       .reduce((s, inv) => s + inv.amount, 0)
     const biz = yearExpenses
-      .filter((e) => e.type === 'business' && new Date(e.date).getMonth() === i)
+      .filter((e) => e.type === 'business' && parseLocalDate(e.date).getMonth() === i)
       .reduce((s, e) => s + e.amount, 0)
     const per = yearExpenses
-      .filter((e) => e.type === 'personal' && new Date(e.date).getMonth() === i)
+      .filter((e) => e.type === 'personal' && parseLocalDate(e.date).getMonth() === i)
       .reduce((s, e) => s + e.amount, 0)
     return {
       Month: label,

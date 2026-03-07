@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { exportInvoices } from '@/lib/export'
 import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
+import { parseLocalDate } from '@/lib/utils'
 
 export default function Invoices() {
   const { user } = useAuth()
@@ -172,15 +173,15 @@ export default function Invoices() {
                     )}
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
-                    {format(new Date(inv.issue_date), 'MMM d, yyyy')}
+                    {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-500 hidden lg:table-cell">
-                    {inv.due_date ? format(new Date(inv.due_date), 'MMM d, yyyy') : '—'}
+                    {inv.due_date ? format(parseLocalDate(inv.due_date), 'MMM d, yyyy') : '—'}
                   </td>
                   <td className="px-4 py-4 hidden lg:table-cell">
                     {inv.date_paid ? (
                       <span className="text-sm text-green-600 font-medium">
-                        {format(new Date(inv.date_paid), 'MMM d, yyyy')}
+                        {format(parseLocalDate(inv.date_paid!), 'MMM d, yyyy')}
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400">—</span>
