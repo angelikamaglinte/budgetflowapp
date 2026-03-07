@@ -1,6 +1,23 @@
+import { useState } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { useAllocation } from '@/contexts/AllocationContext'
 
 export default function Notes() {
+  const { taxRate, savingsRate, setTaxRate, setSavingsRate } = useAllocation()
+  const [taxInput, setTaxInput] = useState(String(taxRate))
+  const [savingsInput, setSavingsInput] = useState(String(savingsRate))
+
+  function handleTaxBlur() {
+    const val = parseFloat(taxInput)
+    if (!isNaN(val) && val > 0 && val <= 100) setTaxRate(val)
+    else setTaxInput(String(taxRate))
+  }
+
+  function handleSavingsBlur() {
+    const val = parseFloat(savingsInput)
+    if (!isNaN(val) && val > 0 && val <= 100) setSavingsRate(val)
+    else setSavingsInput(String(savingsRate))
+  }
   return (
     <AppLayout title="Notes" subtitle="Your contractor budgeting system reference">
       <div className="max-w-2xl flex flex-col gap-6">
@@ -29,6 +46,53 @@ export default function Notes() {
             <div className="flex flex-col gap-0.5">
               <p className="text-sm font-semibold text-gray-900">360 Integrations</p>
               <p className="text-sm text-gray-500">Invoiced end of month → Paid after 30 days (next month)</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Allocation Rates */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Allocation Rates</h2>
+          <p className="text-xs text-gray-400 mb-4">These rates are used to calculate your Tax Reserve and Savings on the dashboard.</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Tax Reserve</p>
+                <p className="text-xs text-gray-400">Kept in Simplii Savings</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={taxInput}
+                  onChange={(e) => setTaxInput(e.target.value)}
+                  onBlur={handleTaxBlur}
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </div>
+            </div>
+            <div className="h-px bg-gray-50" />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">Personal Savings</p>
+                <p className="text-xs text-gray-400">Transferred to TD Savings</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={savingsInput}
+                  onChange={(e) => setSavingsInput(e.target.value)}
+                  onBlur={handleSavingsBlur}
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </div>
             </div>
           </div>
         </div>

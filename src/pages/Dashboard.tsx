@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Clock, PiggyBank, ShieldCheck } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { SpendingChart } from '@/components/dashboard/SpendingChart'
@@ -9,6 +9,7 @@ import { RecentInvoices } from '@/components/dashboard/RecentInvoices'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
+import { useAllocation } from '@/contexts/AllocationContext'
 
 function formatMoney(n: number) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
   const { periodFilter } = usePeriod()
+  const { taxRate, savingsRate } = useAllocation()
 
   const stats = useMemo(() => {
     const filteredExp = expenses.filter((e) => matchesPeriod(e.date, periodFilter))
@@ -31,9 +33,11 @@ export default function Dashboard() {
       .filter((inv) => inv.status === 'pending')
       .reduce((sum, inv) => sum + inv.amount, 0)
     const netProfit = totalIncome - totalExpenses
+    const taxReserve = totalIncome * (taxRate / 100)
+    const savings = totalIncome * (savingsRate / 100)
 
-    return { totalExpenses, totalIncome, pending, netProfit }
-  }, [expenses, invoices, periodFilter])
+    return { totalExpenses, totalIncome, pending, netProfit, taxReserve, savings }
+  }, [expenses, invoices, periodFilter, taxRate, savingsRate])
 
   const subtitle = periodFilter
     ? `Financial overview for ${periodLabel(periodFilter)}`
@@ -44,8 +48,8 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <AppLayout title="Dashboard" subtitle="Your financial overview">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-5 h-28 animate-pulse" />
           ))}
         </div>
@@ -56,7 +60,7 @@ export default function Dashboard() {
   return (
     <AppLayout title="Dashboard" subtitle={subtitle}>
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
         <StatCard
           label="Total Income"
           value={formatMoney(stats.totalIncome)}
@@ -80,6 +84,18 @@ export default function Dashboard() {
           value={formatMoney(stats.pending)}
           icon={<Clock className="w-5 h-5 text-amber-600" />}
           iconBg="bg-amber-50"
+        />
+        <StatCard
+          label={`Tax Reserve (${taxRate}%)`}
+          value={formatMoney(stats.taxReserve)}
+          icon={<ShieldCheck className="w-5 h-5 text-red-500" />}
+          iconBg="bg-red-50"
+        />
+        <StatCard
+          label={`Savings (${savingsRate}%)`}
+          value={formatMoney(stats.savings)}
+          icon={<PiggyBank className="w-5 h-5 text-green-600" />}
+          iconBg="bg-green-50"
         />
       </div>
 
