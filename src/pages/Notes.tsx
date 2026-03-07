@@ -50,6 +50,27 @@ export default function Notes() {
           </div>
         </div>
 
+        {/* Currency Note */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Currency Tracking</h2>
+          <p className="text-xs text-gray-400 mb-4">Important for exports and tax filing.</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-semibold text-gray-900">Satori Bear Inc</p>
+              <p className="text-sm text-gray-500">Invoiced and paid in <span className="font-medium text-gray-700">CAD</span> — amounts in app match invoice exactly.</p>
+            </div>
+            <div className="h-px bg-gray-50" />
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-gray-900">360 Integration LLC</p>
+              <p className="text-sm text-gray-500">Invoiced in <span className="font-medium text-gray-700">USD</span>, received in <span className="font-medium text-gray-700">CAD</span> via wire transfer.</p>
+              <p className="text-sm text-gray-500 mt-1">The <span className="font-medium text-gray-700">CAD amount received</span> (from your bank statement) is what's tracked in this app — not the USD invoice amount. This is correct for CRA tax filing.</p>
+              <div className="mt-2 px-3 py-2 bg-gray-50 rounded-xl text-xs text-gray-500">
+                Example: Invoice for USD 2,400 → received CAD 3,185.04 → <span className="font-medium text-gray-700">$3,185.04 is entered in the app</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Allocation Rates */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Allocation Rates</h2>
