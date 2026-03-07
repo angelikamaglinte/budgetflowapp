@@ -28,6 +28,7 @@ export const EXPENSE_CATEGORIES = [
   'Equipment',
   'Education',
   'Utilities',
+  'Phone & Internet',
   'Family Support',
   'Other',
 ] as const
@@ -43,6 +44,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Equipment: 'bg-amber-100 text-amber-700',
   Education: 'bg-teal-100 text-teal-700',
   Utilities: 'bg-cyan-100 text-cyan-700',
+  'Phone & Internet': 'bg-violet-100 text-violet-700',
   'Family Support': 'bg-rose-100 text-rose-700',
   Other: 'bg-gray-100 text-gray-700',
 }
@@ -56,6 +58,7 @@ export const CATEGORY_CHART_COLORS: Record<string, string> = {
   Equipment: '#f59e0b',
   Education: '#14b8a6',
   Utilities: '#06b6d4',
+  'Phone & Internet': '#7c3aed',
   'Family Support': '#f43f5e',
   Other: '#9ca3af',
 }
