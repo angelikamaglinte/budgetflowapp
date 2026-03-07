@@ -6,6 +6,7 @@ import { CategoryBadge } from '@/components/expenses/CategoryBadge'
 import { ExpenseForm } from '@/components/expenses/ExpenseForm'
 import type { ExpenseFormValues } from '@/components/expenses/ExpenseForm'
 import { useExpenses, useAddExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/useExpenses'
+import { useAuth } from '@/contexts/AuthContext'
 import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
 import type { Expense } from '@/types'
@@ -21,6 +22,7 @@ const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
 ]
 
 export default function Expenses() {
+  const { user } = useAuth()
   const { data: expenses = [], isLoading } = useExpenses()
   const addExpense = useAddExpense()
   const updateExpense = useUpdateExpense()
@@ -68,7 +70,7 @@ export default function Expenses() {
     if (editTarget) {
       await updateExpense.mutateAsync({ id: editTarget.id, ...values })
     } else {
-      await addExpense.mutateAsync(values)
+      await addExpense.mutateAsync({ ...values, user_id: user!.id })
     }
     setFormOpen(false)
     setEditTarget(null)
