@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '@/types'
 
 export function useInvoices() {
+  const { user } = useAuth()
   return useQuery<Invoice[]>({
     queryKey: ['invoices'],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')

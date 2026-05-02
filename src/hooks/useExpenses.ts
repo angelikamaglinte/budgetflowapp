@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import type { Expense, ExpenseInsert, ExpenseUpdate } from '@/types'
 
 export function useExpenses() {
+  const { user } = useAuth()
   return useQuery<Expense[]>({
     queryKey: ['expenses'],
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('expenses')
