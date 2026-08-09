@@ -18,7 +18,7 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col">
         <h3 className="font-semibold text-gray-900 mb-1">Expense by Category</h3>
         <p className="text-xs text-gray-400 mb-5">This month</p>
         <div className="flex-1 flex items-center justify-center">
@@ -29,7 +29,7 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
       <h3 className="font-semibold text-gray-900 mb-1">Expense by Category</h3>
       <p className="text-xs text-gray-400 mb-4">All time</p>
       <ResponsiveContainer width="100%" height={220}>

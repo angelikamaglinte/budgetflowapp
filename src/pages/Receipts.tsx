@@ -93,7 +93,7 @@ export default function Receipts() {
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`
-          mb-6 border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all
+          mb-6 border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer transition-all
           ${dragOver
             ? 'border-blue-400 bg-blue-50'
             : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'}

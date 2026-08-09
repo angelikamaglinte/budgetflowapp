@@ -113,7 +113,7 @@ export default function Expenses() {
       }
     >
       {/* Summary cards / tabs */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -197,53 +197,36 @@ export default function Expenses() {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Date</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Title</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Vendor</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Category</th>
-                {activeTab === 'all' && (
-                  <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden sm:table-cell">Type</th>
-                )}
-                <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
-                <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Mobile card list */}
+            <div className="sm:hidden flex flex-col divide-y divide-gray-50">
               {filtered.map((exp) => (
-                <tr key={exp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-4 py-4">
-                    <p className="text-sm font-medium text-gray-900">{exp.title}</p>
-                    {exp.notes && <p className="text-xs text-gray-400 truncate max-w-[180px]">{exp.notes}</p>}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
-                    {exp.vendor ?? '—'}
-                  </td>
-                  <td className="px-4 py-4">
-                    <CategoryBadge category={exp.category} />
-                  </td>
-                  {activeTab === 'all' && (
-                    <td className="px-4 py-4 hidden sm:table-cell">
-                      <span className={cn(
-                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                        EXPENSE_TYPE_COLORS[exp.type as 'business' | 'personal'] ?? 'bg-gray-100 text-gray-600'
-                      )}>
-                        {exp.type === 'business' ? 'Business' : 'Personal'}
-                      </span>
-                    </td>
-                  )}
-                  <td className="px-4 py-4 text-right">
-                    <span className="text-sm font-semibold text-gray-900">
+                <div key={exp.id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{exp.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
+                        {exp.vendor ? ` · ${exp.vendor}` : ''}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 shrink-0">
                       ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CategoryBadge category={exp.category} />
+                      {activeTab === 'all' && (
+                        <span className={cn(
+                          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                          EXPENSE_TYPE_COLORS[exp.type as 'business' | 'personal'] ?? 'bg-gray-100 text-gray-600'
+                        )}>
+                          {exp.type === 'business' ? 'Business' : 'Personal'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => openEdit(exp)}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
@@ -257,11 +240,80 @@ export default function Expenses() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Table (tablet+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Date</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Title</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Vendor</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Category</th>
+                    {activeTab === 'all' && (
+                      <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden sm:table-cell">Type</th>
+                    )}
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((exp) => (
+                    <tr key={exp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                        {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-medium text-gray-900">{exp.title}</p>
+                        {exp.notes && <p className="text-xs text-gray-400 truncate max-w-[180px]">{exp.notes}</p>}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
+                        {exp.vendor ?? '—'}
+                      </td>
+                      <td className="px-4 py-4">
+                        <CategoryBadge category={exp.category} />
+                      </td>
+                      {activeTab === 'all' && (
+                        <td className="px-4 py-4 hidden sm:table-cell">
+                          <span className={cn(
+                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+                            EXPENSE_TYPE_COLORS[exp.type as 'business' | 'personal'] ?? 'bg-gray-100 text-gray-600'
+                          )}>
+                            {exp.type === 'business' ? 'Business' : 'Personal'}
+                          </span>
+                        </td>
+                      )}
+                      <td className="px-4 py-4 text-right">
+                        <span className="text-sm font-semibold text-gray-900">
+                          ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEdit(exp)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(exp.id)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

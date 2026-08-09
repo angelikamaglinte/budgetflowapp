@@ -75,7 +75,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Invoice #</label>
               <input
@@ -131,7 +131,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
             {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Issue Date</label>
               <input

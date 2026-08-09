@@ -147,56 +147,25 @@ export default function Invoices() {
             </p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Invoice #</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Client</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Issue Date</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Due Date</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Date Paid</th>
-                <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Status</th>
-                <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
-                <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Mobile card list */}
+            <div className="sm:hidden flex flex-col divide-y divide-gray-50">
               {filtered.map((inv) => (
-                <tr key={inv.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-gray-900">{inv.invoice_number}</span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <p className="text-sm font-medium text-gray-900">{inv.client_name}</p>
-                    {inv.client_email && (
-                      <p className="text-xs text-gray-400">{inv.client_email}</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
-                    {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 hidden lg:table-cell">
-                    {inv.due_date ? format(parseLocalDate(inv.due_date), 'MMM d, yyyy') : '—'}
-                  </td>
-                  <td className="px-4 py-4 hidden lg:table-cell">
-                    {inv.date_paid ? (
-                      <span className="text-sm text-green-600 font-medium">
-                        {format(parseLocalDate(inv.date_paid!), 'MMM d, yyyy')}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge status={inv.status} />
-                  </td>
-                  <td className="px-4 py-4 text-right">
-                    <span className="text-sm font-semibold text-gray-900">
+                <div key={inv.id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{inv.client_name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {inv.invoice_number} · {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900 shrink-0">
                       ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <StatusBadge status={inv.status} />
+                    <div className="flex items-center gap-1 shrink-0">
                       {inv.status === 'pending' && (
                         <button
                           onClick={() => void markPaid(inv)}
@@ -219,11 +188,92 @@ export default function Invoices() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Table (tablet+) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Invoice #</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Client</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Issue Date</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Due Date</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Date Paid</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Status</th>
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((inv) => (
+                    <tr key={inv.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">{inv.invoice_number}</span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-medium text-gray-900">{inv.client_name}</p>
+                        {inv.client_email && (
+                          <p className="text-xs text-gray-400">{inv.client_email}</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
+                        {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500 hidden lg:table-cell">
+                        {inv.due_date ? format(parseLocalDate(inv.due_date), 'MMM d, yyyy') : '—'}
+                      </td>
+                      <td className="px-4 py-4 hidden lg:table-cell">
+                        {inv.date_paid ? (
+                          <span className="text-sm text-green-600 font-medium">
+                            {format(parseLocalDate(inv.date_paid!), 'MMM d, yyyy')}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusBadge status={inv.status} />
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className="text-sm font-semibold text-gray-900">
+                          ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {inv.status === 'pending' && (
+                            <button
+                              onClick={() => void markPaid(inv)}
+                              title="Mark as paid"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setEditTarget(inv); setFormOpen(true) }}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(inv.id)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

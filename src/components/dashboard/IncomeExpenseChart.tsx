@@ -39,7 +39,7 @@ export function IncomeExpenseChart({ expenses, invoices }: IncomeExpenseChartPro
   const data = buildData(expenses, invoices)
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
       <h3 className="font-semibold text-gray-900 mb-1">Income vs Expenses</h3>
       <p className="text-xs text-gray-400 mb-5">Last 6 months</p>
       <ResponsiveContainer width="100%" height={220}>

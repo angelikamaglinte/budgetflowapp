@@ -141,7 +141,7 @@ export default function Notes() {
         {/* Transfer Process */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Transfer Process</h2>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
             <div className="flex flex-col items-center gap-1">
               <div className="px-3 py-2 bg-gray-100 rounded-xl text-gray-700 font-medium text-xs">Simplii Savings</div>
             </div>
