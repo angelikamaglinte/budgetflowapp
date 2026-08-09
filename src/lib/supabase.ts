@@ -8,7 +8,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Types are applied explicitly in each hook via casts for maximum compatibility
-// Using budgetflowapp schema in a consolidated Supabase project
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  db: { schema: 'budgetflowapp' },
-})
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

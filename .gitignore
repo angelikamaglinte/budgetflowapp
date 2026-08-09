@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local-only DB scripts (contain schema/data not meant for the public repo)
+supabase/schema.sql
+supabase/migrate-data.sql
+expenses_rows.csv
+invoices_rows.csv
