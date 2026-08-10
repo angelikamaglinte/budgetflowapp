@@ -1,16 +1,17 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   CreditCard,
   FileText,
   Receipt,
   TrendingUp,
-  LogOut,
   NotebookText,
   X,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getDisplayName } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import ProfileDropdown from '@/components/kokonutui/profile-dropdown'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -102,23 +103,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        {/* User + Sign out */}
+        {/* Profile / sign out */}
         <div className="px-3 py-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-3 py-2 mb-1">
-            <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
-              <span className="text-xs font-semibold text-primary-600">
-                {user?.email?.charAt(0).toUpperCase() ?? 'U'}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 truncate flex-1 min-w-0">{user?.email}</p>
-          </div>
-          <button
-            onClick={() => void handleSignOut()}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all"
-          >
-            <LogOut className="w-4 h-4 text-gray-400" />
-            Sign out
-          </button>
+          <ProfileDropdown
+            name={getDisplayName(user)}
+            email={user?.email ?? ''}
+            onSignOut={() => void handleSignOut()}
+          />
         </div>
       </aside>
     </>

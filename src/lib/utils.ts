@@ -11,3 +11,18 @@ export function cn(...inputs: ClassValue[]) {
 export function parseLocalDate(dateStr: string): Date {
   return new Date(dateStr + 'T12:00:00')
 }
+
+// Full name comes from Supabase user_metadata (set at signup). Accounts created
+// before the name field existed won't have one, so fall back to a name derived
+// from the email's local part (e.g. "marie.angelika" -> "Marie Angelika").
+export function getDisplayName(user: { user_metadata?: { full_name?: string }; email?: string } | null): string {
+  const fullName = user?.user_metadata?.full_name
+  if (fullName) return fullName
+
+  const localPart = user?.email?.split('@')[0] ?? ''
+  return localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ') || 'User'
+}

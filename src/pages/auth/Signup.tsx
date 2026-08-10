@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 const signupSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
@@ -31,7 +32,7 @@ export default function Signup() {
   async function onSubmit(values: SignupForm) {
     setAuthError(null)
     try {
-      await signUp(values.email, values.password)
+      await signUp(values.email, values.password, values.fullName)
       setSuccess(true)
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Signup failed')
@@ -106,6 +107,17 @@ export default function Signup() {
                 {authError}
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
+              <input
+                {...register('fullName')}
+                type="text"
+                placeholder="Jane Doe"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+              />
+              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName.message}</p>}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
