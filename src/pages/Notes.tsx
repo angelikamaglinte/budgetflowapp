@@ -23,14 +23,14 @@ export default function Notes() {
       <div className="max-w-2xl flex flex-col gap-6">
 
         {/* Budgeting Rule */}
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-3">Budgeting Rule</h2>
-          <p className="text-sm text-blue-900 font-medium mb-2">
+        <div className="bg-[#E9F3F7] border border-[#D5E7EE] rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-[#2E5570] uppercase tracking-wider mb-3">Budgeting Rule</h2>
+          <p className="text-sm text-[#1E3A4D] font-medium mb-2">
             Income received <span className="underline">this month</span> = Pay <span className="underline">this month's</span> expenses
           </p>
           <div className="flex flex-col gap-1 mt-3">
-            <p className="text-sm text-blue-700">• January work → Paid in February → Covers February expenses</p>
-            <p className="text-sm text-blue-700">• February work → Paid in March → Covers March expenses</p>
+            <p className="text-sm text-[#487CA5]">• January work → Paid in February → Covers February expenses</p>
+            <p className="text-sm text-[#487CA5]">• February work → Paid in March → Covers March expenses</p>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function Notes() {
                   value={taxInput}
                   onChange={(e) => setTaxInput(e.target.value)}
                   onBlur={handleTaxBlur}
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-500">%</span>
               </div>
@@ -110,7 +110,7 @@ export default function Notes() {
                   value={savingsInput}
                   onChange={(e) => setSavingsInput(e.target.value)}
                   onBlur={handleSavingsBlur}
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-500">%</span>
               </div>
@@ -123,10 +123,10 @@ export default function Notes() {
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Allocation Formula (per payment)</h2>
           <div className="flex flex-col gap-2">
             {[
-              { label: 'Tax (20%)', desc: 'Keep in Simplii Savings — do NOT touch', color: 'bg-red-50 text-red-700 border-red-100' },
-              { label: 'Personal Savings (10%)', desc: 'Transfer to TD Savings', color: 'bg-green-50 text-green-700 border-green-100' },
-              { label: 'Business Expenses', desc: 'Reimburse to TD Chequing (if paid from TD)', color: 'bg-amber-50 text-amber-700 border-amber-100' },
-              { label: 'Personal Expenses', desc: 'Transfer to TD Chequing', color: 'bg-purple-50 text-purple-700 border-purple-100' },
+              { label: 'Tax (20%)', desc: 'Keep in Simplii Savings — do NOT touch', color: 'bg-[#FAECEC] text-[#C4554D] border-[#F3D8D8]' },
+              { label: 'Personal Savings (10%)', desc: 'Transfer to TD Savings', color: 'bg-[#EEF3ED] text-[#548164] border-[#DCE9DA]' },
+              { label: 'Business Expenses', desc: 'Reimburse to TD Chequing (if paid from TD)', color: 'bg-[#FAF3DD] text-[#C29343] border-[#F2E6BF]' },
+              { label: 'Personal Expenses', desc: 'Transfer to TD Chequing', color: 'bg-[#F6F3F8] text-[#8A67AB] border-[#E9E1EE]' },
             ].map(({ label, desc, color }) => (
               <div key={label} className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${color}`}>
                 <div className="flex-1">
@@ -194,8 +194,8 @@ export default function Notes() {
         </div>
 
         {/* Reminders */}
-        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-amber-800 uppercase tracking-wider mb-3">Important Reminders</h2>
+        <div className="bg-[#FAF3DD] border border-[#F2E6BF] rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-[#8A6A1F] uppercase tracking-wider mb-3">Important Reminders</h2>
           <div className="flex flex-col gap-1.5">
             {[
               'Set aside tax & savings IMMEDIATELY when payment arrives',
@@ -203,7 +203,7 @@ export default function Notes() {
               'Separate each payment\'s budget — don\'t mix',
               'Track everything in the app',
             ].map((reminder) => (
-              <p key={reminder} className="text-sm text-amber-800">✓ {reminder}</p>
+              <p key={reminder} className="text-sm text-[#8A6A1F]">✓ {reminder}</p>
             ))}
           </div>
         </div>

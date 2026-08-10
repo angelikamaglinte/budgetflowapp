@@ -15,8 +15,8 @@ export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
 
 export const EXPENSE_TYPE_COLORS: Record<ExpenseType, string> = {
-  business: 'bg-blue-50 text-blue-700',
-  personal: 'bg-pink-50 text-pink-700',
+  business: 'bg-[#E9F3F7] text-[#487CA5]',
+  personal: 'bg-[#F9F2F5] text-[#B35488]',
 }
 
 export const EXPENSE_CATEGORIES = [
@@ -36,38 +36,42 @@ export const EXPENSE_CATEGORIES = [
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 
+// Category colors follow Notion's 9-color muted tag system (verified hex, light-mode
+// text/bg pairs). 12 categories share 9 colors — Blue, Pink, and Gray are each reused
+// once for categories unlikely to appear side by side often.
 export const CATEGORY_COLORS: Record<string, string> = {
-  Software: 'bg-blue-100 text-blue-700',
-  Office: 'bg-blue-100 text-blue-700',
-  Transport: 'bg-sky-100 text-sky-700',
-  'Food & Dining': 'bg-green-100 text-green-700',
-  'Meals & Entertainment': 'bg-lime-100 text-lime-700',
-  Marketing: 'bg-orange-100 text-orange-700',
-  Equipment: 'bg-amber-100 text-amber-700',
-  Education: 'bg-teal-100 text-teal-700',
-  Utilities: 'bg-cyan-100 text-cyan-700',
-  'Phone & Internet': 'bg-violet-100 text-violet-700',
-  'Family Support': 'bg-rose-100 text-rose-700',
-  Other: 'bg-gray-100 text-gray-700',
+  Software: 'bg-[#E9F3F7] text-[#487CA5]', // Blue
+  Office: 'bg-[#F1F1EF] text-[#787774]', // Gray
+  Transport: 'bg-[#F3EEEE] text-[#976D57]', // Brown
+  'Food & Dining': 'bg-[#EEF3ED] text-[#548164]', // Green
+  'Meals & Entertainment': 'bg-[#F8ECDF] text-[#CC782F]', // Orange
+  Marketing: 'bg-[#F9F2F5] text-[#B35488]', // Pink
+  Equipment: 'bg-[#FAF3DD] text-[#C29343]', // Yellow
+  Education: 'bg-[#F6F3F8] text-[#8A67AB]', // Purple
+  Utilities: 'bg-[#FAECEC] text-[#C4554D]', // Red
+  'Phone & Internet': 'bg-[#E9F3F7] text-[#487CA5]', // Blue (reuse)
+  'Family Support': 'bg-[#F9F2F5] text-[#B35488]', // Pink (reuse)
+  Other: 'bg-[#F1F1EF] text-[#787774]', // Gray (reuse)
 }
 
+// Parallel hex map for recharts fills (same Notion palette, text-color values)
 export const CATEGORY_CHART_COLORS: Record<string, string> = {
-  Software: '#8b5cf6',
-  Office: '#3b82f6',
-  Transport: '#0ea5e9',
-  'Food & Dining': '#22c55e',
-  'Meals & Entertainment': '#84cc16',
-  Marketing: '#f97316',
-  Equipment: '#f59e0b',
-  Education: '#14b8a6',
-  Utilities: '#06b6d4',
-  'Phone & Internet': '#7c3aed',
-  'Family Support': '#f43f5e',
-  Other: '#9ca3af',
+  Software: '#487CA5',
+  Office: '#787774',
+  Transport: '#976D57',
+  'Food & Dining': '#548164',
+  'Meals & Entertainment': '#CC782F',
+  Marketing: '#B35488',
+  Equipment: '#C29343',
+  Education: '#8A67AB',
+  Utilities: '#C4554D',
+  'Phone & Internet': '#487CA5',
+  'Family Support': '#B35488',
+  Other: '#787774',
 }
 
 export const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  paid: 'bg-green-100 text-green-700',
-  overdue: 'bg-red-100 text-red-700',
+  pending: 'bg-[#FAF3DD] text-[#C29343]', // Yellow
+  paid: 'bg-[#EEF3ED] text-[#548164]', // Green
+  overdue: 'bg-[#FAECEC] text-[#C4554D]', // Red
 }

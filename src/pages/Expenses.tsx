@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { Modal } from '@/components/ui/Modal'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
 import { ExpenseForm } from '@/components/expenses/ExpenseForm'
 import type { ExpenseFormValues } from '@/components/expenses/ExpenseForm'
@@ -105,7 +106,7 @@ export default function Expenses() {
           </button>
           <button
             onClick={() => { setEditTarget(null); setFormOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
           >
             <Plus className="w-4 h-4" /> Add Expense
           </button>
@@ -121,13 +122,13 @@ export default function Expenses() {
             className={cn(
               'text-left p-4 rounded-2xl border transition-all',
               activeTab === tab.id
-                ? 'bg-white border-blue-200 shadow-[0_1px_3px_rgba(0,0,0,0.07)] ring-1 ring-blue-200'
+                ? 'bg-white border-primary-200 shadow-[0_1px_3px_rgba(0,0,0,0.07)] ring-1 ring-primary-200'
                 : 'bg-white border-gray-100 hover:border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
             )}
           >
             <div className={cn(
               'flex items-center gap-2 text-sm font-medium mb-2',
-              activeTab === tab.id ? 'text-blue-700' : 'text-gray-500'
+              activeTab === tab.id ? 'text-primary-700' : 'text-gray-500'
             )}>
               {tab.icon}
               {tab.label}
@@ -148,13 +149,13 @@ export default function Expenses() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search expenses..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="">All categories</option>
           {EXPENSE_CATEGORIES.map((cat) => (
@@ -181,8 +182,8 @@ export default function Expenses() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
-              <Plus className="w-6 h-6 text-blue-400" />
+            <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
+              <Plus className="w-6 h-6 text-primary-400" />
             </div>
             <p className="text-gray-500 text-sm">
               {search || categoryFilter ? 'No expenses match your filters' : `No ${activeTab === 'all' ? '' : activeTab + ' '}expenses yet`}
@@ -190,7 +191,7 @@ export default function Expenses() {
             {!search && !categoryFilter && (
               <button
                 onClick={() => { setEditTarget(null); setFormOpen(true) }}
-                className="text-blue-600 text-sm font-medium hover:underline"
+                className="text-primary-600 text-sm font-medium hover:underline"
               >
                 Add expense
               </button>
@@ -229,7 +230,7 @@ export default function Expenses() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => openEdit(exp)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -296,7 +297,7 @@ export default function Expenses() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEdit(exp)}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -326,29 +327,26 @@ export default function Expenses() {
       />
 
       {/* Delete confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setDeleteId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-2">Delete expense?</h3>
-            <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => void handleDelete(deleteId)}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
-              >
-                Delete
-              </button>
-            </div>
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">
+        <div className="p-6">
+          <h3 className="font-semibold text-gray-900 mb-2">Delete expense?</h3>
+          <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDeleteId(null)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteId && void handleDelete(deleteId)}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
+            >
+              Delete
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
     </AppLayout>
   )
 }

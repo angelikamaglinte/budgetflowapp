@@ -41,7 +41,7 @@ export function AppLayout({ children, title, subtitle, action }: AppLayoutProps)
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center shrink-0">
             <TrendingUp className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-bold text-gray-900 text-sm">BudgetFlow</span>
@@ -61,7 +61,7 @@ export function AppLayout({ children, title, subtitle, action }: AppLayoutProps)
               <select
                 value={periodFilter}
                 onChange={(e) => setPeriodFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">All time</option>
                 <optgroup label="Year">

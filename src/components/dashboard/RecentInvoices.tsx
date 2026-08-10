@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import { motion } from 'motion/react'
 import type { Invoice, InvoiceStatus } from '@/types'
 import { STATUS_COLORS } from '@/types'
 import { parseLocalDate } from '@/lib/utils'
@@ -22,7 +23,7 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
         </div>
         <Link
           to="/invoices"
-          className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition"
+          className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1 transition"
         >
           View all <ArrowRight className="w-3 h-3" />
         </Link>
@@ -32,8 +33,14 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
         <p className="text-sm text-gray-400 text-center py-8">No invoices yet</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {recent.map((inv) => (
-            <div key={inv.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+          {recent.map((inv, i) => (
+            <motion.div
+              key={inv.id}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.05 }}
+              className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+            >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{inv.client_name}</p>
                 <p className="text-xs text-gray-400">
@@ -53,7 +60,7 @@ export function RecentInvoices({ invoices }: RecentInvoicesProps) {
                   ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

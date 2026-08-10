@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { Plus, Search, Pencil, Trash2, CheckCircle, Download } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { Modal } from '@/components/ui/Modal'
 import { StatusBadge } from '@/components/invoices/StatusBadge'
 import { InvoiceForm } from '@/components/invoices/InvoiceForm'
 import type { InvoiceFormValues } from '@/components/invoices/InvoiceForm'
@@ -81,7 +82,7 @@ export default function Invoices() {
           </button>
           <button
             onClick={() => { setEditTarget(null); setFormOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
           >
             <Plus className="w-4 h-4" /> New Invoice
           </button>
@@ -114,13 +115,13 @@ export default function Invoices() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search invoices..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
@@ -139,8 +140,8 @@ export default function Invoices() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
-              <Plus className="w-6 h-6 text-blue-400" />
+            <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
+              <Plus className="w-6 h-6 text-primary-400" />
             </div>
             <p className="text-gray-500 text-sm">
               {search || statusFilter ? 'No invoices match your filters' : 'No invoices yet — create your first one!'}
@@ -177,7 +178,7 @@ export default function Invoices() {
                       )}
                       <button
                         onClick={() => { setEditTarget(inv); setFormOpen(true) }}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -256,7 +257,7 @@ export default function Invoices() {
                           )}
                           <button
                             onClick={() => { setEditTarget(inv); setFormOpen(true) }}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -284,29 +285,26 @@ export default function Invoices() {
         initial={editTarget ?? undefined}
       />
 
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setDeleteId(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-2">Delete invoice?</h3>
-            <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => void handleDelete(deleteId)}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
-              >
-                Delete
-              </button>
-            </div>
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">
+        <div className="p-6">
+          <h3 className="font-semibold text-gray-900 mb-2">Delete invoice?</h3>
+          <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDeleteId(null)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteId && void handleDelete(deleteId)}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
+            >
+              Delete
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
     </AppLayout>
   )
 }

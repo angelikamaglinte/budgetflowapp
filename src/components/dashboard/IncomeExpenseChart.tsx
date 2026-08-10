@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { motion } from 'motion/react'
 import type { Expense, Invoice } from '@/types'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
@@ -39,20 +40,25 @@ export function IncomeExpenseChart({ expenses, invoices }: IncomeExpenseChartPro
   const data = buildData(expenses, invoices)
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
+      className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]"
+    >
       <h3 className="font-semibold text-gray-900 mb-1">Income vs Expenses</h3>
       <p className="text-xs text-gray-400 mb-5">Last 6 months</p>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }} barGap={4}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e9e9e7" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 12, fill: '#9ca3af' }}
+            tick={{ fontSize: 12, fill: '#8fa3ab' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 12, fill: '#9ca3af' }}
+            tick={{ fontSize: 12, fill: '#8fa3ab' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `$${v}`}
@@ -60,7 +66,7 @@ export function IncomeExpenseChart({ expenses, invoices }: IncomeExpenseChartPro
           <Tooltip
             contentStyle={{
               background: 'white',
-              border: '1px solid #e5e7eb',
+              border: '1px solid #e9e9e7',
               borderRadius: '12px',
               fontSize: '13px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -69,15 +75,15 @@ export function IncomeExpenseChart({ expenses, invoices }: IncomeExpenseChartPro
           />
           <Legend
             formatter={(value) => (
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+              <span style={{ fontSize: '12px', color: '#33424a' }}>
                 {value === 'income' ? 'Income' : 'Expenses'}
               </span>
             )}
           />
-          <Bar dataKey="income" fill="#14b8a6" radius={[4, 4, 0, 0]} maxBarSize={32} />
-          <Bar dataKey="expenses" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={32} />
+          <Bar dataKey="income" fill="#548164" radius={[4, 4, 0, 0]} maxBarSize={32} />
+          <Bar dataKey="expenses" fill="#142127" radius={[4, 4, 0, 0]} maxBarSize={32} />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   )
 }

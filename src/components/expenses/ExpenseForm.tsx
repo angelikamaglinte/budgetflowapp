@@ -7,6 +7,7 @@ import { X, Briefcase, User } from 'lucide-react'
 import { EXPENSE_CATEGORIES } from '@/types'
 import type { Expense } from '@/types'
 import { cn } from '@/lib/utils'
+import { Modal } from '@/components/ui/Modal'
 
 const expenseSchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -58,12 +59,8 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
     }
   }, [open, initial, reset])
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <Modal open={open} onClose={onClose}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">{initial ? 'Edit Expense' : 'Add Expense'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
@@ -83,7 +80,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
                 className={cn(
                   'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all',
                   currentType === 'business'
-                    ? 'bg-white text-blue-700 shadow-sm'
+                    ? 'bg-white text-primary-700 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 )}
               >
@@ -96,7 +93,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
                 className={cn(
                   'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all',
                   currentType === 'personal'
-                    ? 'bg-white text-pink-600 shadow-sm'
+                    ? 'bg-white text-[#B35488] shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 )}
               >
@@ -113,7 +110,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
               <input
                 {...register('date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date.message}</p>}
             </div>
@@ -124,7 +121,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
             </div>
@@ -135,7 +132,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <input
               {...register('title')}
               placeholder="e.g. Adobe Creative Cloud"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
           </div>
@@ -145,7 +142,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <input
               {...register('vendor')}
               placeholder="e.g. Adobe Inc."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -153,7 +150,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
             <select
               {...register('category')}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
             >
               <option value="">Select category</option>
               {EXPENSE_CATEGORIES.map((cat) => (
@@ -169,7 +166,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
               {...register('notes')}
               rows={2}
               placeholder="Any additional notes..."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -184,13 +181,12 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
+              className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
             >
               {isSubmitting ? 'Saving...' : initial ? 'Save changes' : 'Add expense'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

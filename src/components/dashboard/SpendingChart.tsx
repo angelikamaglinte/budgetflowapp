@@ -7,6 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { motion } from 'motion/react'
 import type { Expense } from '@/types'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
@@ -39,26 +40,31 @@ export function SpendingChart({ expenses }: SpendingChartProps) {
   const data = buildMonthlyData(expenses)
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]"
+    >
       <h3 className="font-semibold text-gray-900 mb-1">Spending Over Time</h3>
       <p className="text-xs text-gray-400 mb-5">Last 6 months</p>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="spendingGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+              <stop offset="5%" stopColor="#142127" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#142127" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e9e9e7" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 12, fill: '#9ca3af' }}
+            tick={{ fontSize: 12, fill: '#8fa3ab' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 12, fill: '#9ca3af' }}
+            tick={{ fontSize: 12, fill: '#8fa3ab' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `$${v}`}
@@ -66,7 +72,7 @@ export function SpendingChart({ expenses }: SpendingChartProps) {
           <Tooltip
             contentStyle={{
               background: 'white',
-              border: '1px solid #e5e7eb',
+              border: '1px solid #e9e9e7',
               borderRadius: '12px',
               fontSize: '13px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -76,14 +82,14 @@ export function SpendingChart({ expenses }: SpendingChartProps) {
           <Area
             type="monotone"
             dataKey="amount"
-            stroke="#8b5cf6"
+            stroke="#142127"
             strokeWidth={2.5}
             fill="url(#spendingGrad)"
-            dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 0 }}
-            activeDot={{ r: 6, fill: '#7c3aed', strokeWidth: 0 }}
+            dot={{ r: 4, fill: '#142127', strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: '#0d161a', strokeWidth: 0 }}
           />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   )
 }

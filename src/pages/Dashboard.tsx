@@ -11,10 +11,6 @@ import { useInvoices } from '@/hooks/useInvoices'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 import { useAllocation } from '@/contexts/AllocationContext'
 
-function formatMoney(n: number) {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
 export default function Dashboard() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
@@ -63,39 +59,45 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
         <StatCard
           label="Total Income"
-          value={formatMoney(stats.totalIncome)}
-          icon={<TrendingUp className="w-5 h-5 text-teal-600" />}
-          iconBg="bg-teal-50"
+          value={stats.totalIncome}
+          delay={0}
+          icon={<TrendingUp className="w-5 h-5 text-[#548164]" />}
+          iconBg="bg-[#EEF3ED]"
         />
         <StatCard
           label="Total Expenses"
-          value={formatMoney(stats.totalExpenses)}
-          icon={<TrendingDown className="w-5 h-5 text-blue-600" />}
-          iconBg="bg-blue-50"
+          value={stats.totalExpenses}
+          delay={0.05}
+          icon={<TrendingDown className="w-5 h-5 text-primary-600" />}
+          iconBg="bg-primary-50"
         />
         <StatCard
           label="Net Profit"
-          value={formatMoney(stats.netProfit)}
-          icon={<DollarSign className="w-5 h-5 text-blue-600" />}
-          iconBg="bg-blue-50"
+          value={stats.netProfit}
+          delay={0.1}
+          icon={<DollarSign className="w-5 h-5 text-primary-600" />}
+          iconBg="bg-primary-50"
         />
         <StatCard
           label="Pending Invoices"
-          value={formatMoney(stats.pending)}
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
-          iconBg="bg-amber-50"
+          value={stats.pending}
+          delay={0.15}
+          icon={<Clock className="w-5 h-5 text-[#C29343]" />}
+          iconBg="bg-[#FAF3DD]"
         />
         <StatCard
           label={`Tax Reserve (${taxRate}%)`}
-          value={formatMoney(stats.taxReserve)}
-          icon={<ShieldCheck className="w-5 h-5 text-red-500" />}
-          iconBg="bg-red-50"
+          value={stats.taxReserve}
+          delay={0.2}
+          icon={<ShieldCheck className="w-5 h-5 text-primary-600" />}
+          iconBg="bg-accent-100"
         />
         <StatCard
           label={`Savings (${savingsRate}%)`}
-          value={formatMoney(stats.savings)}
-          icon={<PiggyBank className="w-5 h-5 text-green-600" />}
-          iconBg="bg-green-50"
+          value={stats.savings}
+          delay={0.25}
+          icon={<PiggyBank className="w-5 h-5 text-[#487CA5]" />}
+          iconBg="bg-[#E9F3F7]"
         />
       </div>
 

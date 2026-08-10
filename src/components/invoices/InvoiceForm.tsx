@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X } from 'lucide-react'
 import type { Invoice } from '@/types'
+import { Modal } from '@/components/ui/Modal'
 
 const invoiceSchema = z.object({
   invoice_number: z.string().min(1, 'Invoice number is required'),
@@ -61,12 +62,8 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
     }
   }, [open, initial, reset])
 
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <Modal open={open} onClose={onClose}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">{initial ? 'Edit Invoice' : 'New Invoice'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
@@ -81,7 +78,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('invoice_number')}
                 placeholder="INV-001"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               {errors.invoice_number && <p className="mt-1 text-xs text-red-600">{errors.invoice_number.message}</p>}
             </div>
@@ -89,7 +86,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
               <select
                 {...register('status')}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
               >
                 <option value="pending">Pending</option>
                 <option value="paid">Paid</option>
@@ -103,7 +100,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
             <input
               {...register('client_name')}
               placeholder="Acme Corp"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {errors.client_name && <p className="mt-1 text-xs text-red-600">{errors.client_name.message}</p>}
           </div>
@@ -114,7 +111,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               {...register('client_email')}
               type="email"
               placeholder="client@example.com"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {errors.client_email && <p className="mt-1 text-xs text-red-600">{errors.client_email.message}</p>}
           </div>
@@ -126,7 +123,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               type="number"
               step="0.01"
               placeholder="0.00"
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
           </div>
@@ -137,7 +134,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('issue_date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               {errors.issue_date && <p className="mt-1 text-xs text-red-600">{errors.issue_date.message}</p>}
             </div>
@@ -146,7 +143,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('due_date')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -157,7 +154,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               <input
                 {...register('date_paid')}
                 type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-green-300 bg-green-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 rounded-xl border border-[#DCE9DA] bg-[#EEF3ED] text-sm focus:outline-none focus:ring-2 focus:ring-[#548164] focus:border-transparent"
               />
               <p className="mt-1 text-xs text-gray-400">The date you actually received the money</p>
             </div>
@@ -169,7 +166,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
               {...register('notes')}
               rows={2}
               placeholder="Project details, payment terms..."
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -184,13 +181,12 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
+              className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white rounded-xl text-sm font-medium transition"
             >
               {isSubmitting ? 'Saving...' : initial ? 'Save changes' : 'Create invoice'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

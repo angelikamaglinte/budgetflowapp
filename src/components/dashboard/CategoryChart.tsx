@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { motion } from 'motion/react'
 import type { Expense } from '@/types'
 import { CATEGORY_CHART_COLORS } from '@/types'
 
@@ -18,18 +19,28 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col"
+      >
         <h3 className="font-semibold text-gray-900 mb-1">Expense by Category</h3>
         <p className="text-xs text-gray-400 mb-5">This month</p>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-gray-400">No expenses yet</p>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.05 }}
+      className="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.07)]"
+    >
       <h3 className="font-semibold text-gray-900 mb-1">Expense by Category</h3>
       <p className="text-xs text-gray-400 mb-4">All time</p>
       <ResponsiveContainer width="100%" height={220}>
@@ -46,14 +57,14 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
             {data.map((entry) => (
               <Cell
                 key={entry.name}
-                fill={CATEGORY_CHART_COLORS[entry.name] ?? '#9ca3af'}
+                fill={CATEGORY_CHART_COLORS[entry.name] ?? '#8fa3ab'}
               />
             ))}
           </Pie>
           <Tooltip
             contentStyle={{
               background: 'white',
-              border: '1px solid #e5e7eb',
+              border: '1px solid #e9e9e7',
               borderRadius: '12px',
               fontSize: '13px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
@@ -62,11 +73,11 @@ export function CategoryChart({ expenses }: CategoryChartProps) {
           />
           <Legend
             formatter={(value) => (
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>{value}</span>
+              <span style={{ fontSize: '12px', color: '#33424a' }}>{value}</span>
             )}
           />
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   )
 }

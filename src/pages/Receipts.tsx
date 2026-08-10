@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { format } from 'date-fns'
+import { motion } from 'motion/react'
 import { Upload, FileText, Trash2, ExternalLink, ImageIcon } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { Modal } from '@/components/ui/Modal'
 import { useReceipts, useUploadReceipt, useDeleteReceipt } from '@/hooks/useReceipts'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useLinkReceiptToExpense } from '@/hooks/useReceipts'
@@ -71,7 +73,7 @@ export default function Receipts() {
       action={
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
         >
           <Upload className="w-4 h-4" /> Upload Receipt
         </button>
@@ -87,24 +89,36 @@ export default function Receipts() {
       />
 
       {/* Drop zone */}
-      <div
+      <motion.div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`
-          mb-6 border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer transition-all
-          ${dragOver
-            ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/40'}
-        `}
+        animate={{
+          borderColor: dragOver ? '#142127' : '#e5e7eb',
+          backgroundColor: dragOver ? '#faf8f5' : '#ffffff',
+          scale: dragOver ? 1.01 : 1,
+        }}
+        whileHover={{ scale: 1.005 }}
+        transition={{ duration: 0.2 }}
+        className="mb-6 border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer"
       >
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${dragOver ? 'bg-blue-100' : 'bg-gray-100'}`}>
-            <Upload className={`w-6 h-6 ${dragOver ? 'text-blue-600' : 'text-gray-400'}`} />
-          </div>
+          <motion.div
+            animate={{ scale: dragOver ? 1.15 : 1, rotate: dragOver ? -8 : 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${dragOver ? 'bg-primary-100' : 'bg-gray-100'}`}
+          >
+            <Upload className={`w-6 h-6 ${dragOver ? 'text-primary-600' : 'text-gray-400'}`} />
+          </motion.div>
           {uploading ? (
-            <p className="text-sm text-blue-600 font-medium">Uploading...</p>
+            <motion.p
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.2, repeat: Infinity }}
+              className="text-sm text-primary-600 font-medium"
+            >
+              Uploading...
+            </motion.p>
           ) : (
             <>
               <p className="text-sm font-medium text-gray-700">
@@ -114,7 +128,7 @@ export default function Receipts() {
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {uploadError && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
@@ -194,7 +208,7 @@ export default function Receipts() {
                 <select
                   value={receipt.expense_id ?? ''}
                   onChange={(e) => void handleLinkChange(receipt.id, e.target.value)}
-                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
                   title="Link to expense"
                 >
                   <option value="">Link to expense...</option>
@@ -211,32 +225,29 @@ export default function Receipts() {
       )}
 
       {/* Delete confirmation */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-            <h3 className="font-semibold text-gray-900 mb-2">Delete receipt?</h3>
-            <p className="text-sm text-gray-500 mb-1">
-              <span className="font-medium text-gray-700">{deleteTarget.filename}</span> will be permanently removed.
-            </p>
-            <p className="text-sm text-gray-400 mb-5">This cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => void handleDelete(deleteTarget)}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
-              >
-                Delete
-              </button>
-            </div>
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="max-w-sm">
+        <div className="p-6">
+          <h3 className="font-semibold text-gray-900 mb-2">Delete receipt?</h3>
+          <p className="text-sm text-gray-500 mb-1">
+            <span className="font-medium text-gray-700">{deleteTarget?.filename}</span> will be permanently removed.
+          </p>
+          <p className="text-sm text-gray-400 mb-5">This cannot be undone.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDeleteTarget(null)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteTarget && void handleDelete(deleteTarget)}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
+            >
+              Delete
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
     </AppLayout>
   )
 }
