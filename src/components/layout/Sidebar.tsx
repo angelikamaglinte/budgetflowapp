@@ -7,6 +7,7 @@ import {
   Receipt,
   TrendingUp,
   NotebookText,
+  BarChart3,
   X,
 } from 'lucide-react'
 import { cn, getDisplayName } from '@/lib/utils'
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/expenses', label: 'Expenses', icon: CreditCard },
   { to: '/invoices', label: 'Invoices', icon: FileText },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/receipts', label: 'Receipts', icon: Receipt },
   { to: '/notes', label: 'Notes', icon: NotebookText },
 ]

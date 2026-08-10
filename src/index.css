@@ -49,6 +49,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Native <button> defaults to cursor: default in most browsers — force pointer
+   for every clickable button (current and future) instead of patching each one. */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

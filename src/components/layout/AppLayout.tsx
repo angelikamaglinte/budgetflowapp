@@ -10,6 +10,7 @@ interface AppLayoutProps {
   title: string
   subtitle?: string
   action?: ReactNode
+  showPeriodSelector?: boolean
 }
 
 const now = new Date()
@@ -25,7 +26,7 @@ const monthOptions = Array.from({ length: 24 }, (_, i) => {
   return { value: format(d, 'yyyy-MM'), label: format(d, 'MMMM yyyy') }
 })
 
-export function AppLayout({ children, title, subtitle, action }: AppLayoutProps) {
+export function AppLayout({ children, title, subtitle, action, showPeriodSelector = true }: AppLayoutProps) {
   const { periodFilter, setPeriodFilter } = usePeriod()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -56,26 +57,28 @@ export function AppLayout({ children, title, subtitle, action }: AppLayoutProps)
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Global period selector */}
-            <div className="flex items-center gap-2 shrink-0">
-              <CalendarDays className="w-4 h-4 text-gray-400" />
-              <select
-                value={periodFilter}
-                onChange={(e) => setPeriodFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">All time</option>
-                <optgroup label="Year">
-                  {yearOptions.map((y) => (
-                    <option key={y.value} value={y.value}>{y.label}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="Month">
-                  {monthOptions.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
+            {showPeriodSelector && (
+              <div className="flex items-center gap-2 shrink-0">
+                <CalendarDays className="w-4 h-4 text-gray-400" />
+                <select
+                  value={periodFilter}
+                  onChange={(e) => setPeriodFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">All time</option>
+                  <optgroup label="Year">
+                    {yearOptions.map((y) => (
+                      <option key={y.value} value={y.value}>{y.label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Month">
+                    {monthOptions.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            )}
 
             {action && <div className="shrink-0">{action}</div>}
           </div>

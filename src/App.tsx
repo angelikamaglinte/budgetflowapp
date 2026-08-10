@@ -9,6 +9,7 @@ import Signup from '@/pages/auth/Signup'
 import Dashboard from '@/pages/Dashboard'
 import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
+import Reports from '@/pages/Reports'
 import Receipts from '@/pages/Receipts'
 import Notes from '@/pages/Notes'
 
@@ -52,6 +53,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               }
             />
