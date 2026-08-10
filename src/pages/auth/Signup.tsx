@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { TrendingUp, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
 
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -150,13 +151,13 @@ export default function Signup() {
               )}
             </div>
 
-            <button
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white font-medium rounded-xl transition text-sm"
+              className="w-full py-2.5 font-medium rounded-xl text-sm"
             >
               {isSubmitting ? 'Creating account...' : 'Create account'}
-            </button>
+            </PrimaryButton>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">

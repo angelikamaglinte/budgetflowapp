@@ -89,6 +89,7 @@ export default function Dashboard() {
           label={`Tax Reserve (${taxRate}%)`}
           value={stats.taxReserve}
           delay={0.2}
+          glow
           icon={<ShieldCheck className="w-5 h-5 text-primary-600" />}
           iconBg="bg-accent-100"
         />

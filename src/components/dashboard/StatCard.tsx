@@ -12,13 +12,14 @@ interface StatCardProps {
   trend?: string
   trendUp?: boolean
   delay?: number
+  glow?: boolean
 }
 
 function formatMoney(n: number) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function StatCard({ label, value, format = formatMoney, icon, iconBg, trend, trendUp, delay = 0 }: StatCardProps) {
+export function StatCard({ label, value, format = formatMoney, icon, iconBg, trend, trendUp, delay = 0, glow = false }: StatCardProps) {
   const motionValue = useMotionValue(0)
   const formatted = useTransform(motionValue, (v) => format(v))
 
@@ -33,7 +34,10 @@ export function StatCard({ label, value, format = formatMoney, icon, iconBg, tre
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.3, delay }}
-      className="bg-white rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
+      className={cn(
+        'bg-white rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow',
+        glow && 'glow-pulse'
+      )}
     >
       <div className="flex items-start justify-between mb-4">
         <motion.div

@@ -16,6 +16,7 @@ All four component libraries below are free/MIT-licensed at the core (verified, 
 | **Kokonut UI** (kokonutui.com) | Actual app components — upload widgets, progress indicators, nav/pricing blocks, dashboard pieces | Free/MIT. Paid "Pro" tier exists — not needed. | Built on Tailwind v4 + shadcn/ui + Motion — matches our stack exactly, copy-paste not npm install |
 | **Magic UI** (magicui.design) | Polished "professional SaaS" sections — bento grids, animated text, marquees | Free/MIT | More restrained than Aceternity, works in both light/dark |
 | **React Bits** (reactbits.dev) | A la carte customizable effects — text reveals, background effects, cursor interactions | Free/MIT | Grab-bag toolkit, not a cohesive page kit — use for 2-3 standout moments, not whole sections |
+| **Bklit UI** (bklit.com) | Dashboard chart/data-viz components — line, area, ring, radar charts | Free/MIT for chart components (their "Studio" playground is proprietary, not needed) | Built on shadcn/ui, composable API. User confirmed the chart components looked great after checking them directly. This means partially replacing Recharts in `SpendingChart`/`CategoryChart`/`IncomeExpenseChart`, not adding alongside it — bigger swap than the others, do as its own focused pass |
 | **Aceternity UI** (ui.aceternity.com) | Pre-login marketing/landing page — spotlight cursors, 3D card tilts, glowing borders, parallax hero | Free/MIT | Dark-mode-heavy, dramatic/cinematic — built for marketing pages, not dense app UI |
 | **GSAP** (gsap.com) | Reserve — only if the landing page hero wants more scroll-driven drama than Motion alone gives | 100% free now (Webflow made all former Club GreenSock plugins free, April 2025) | Imperative/timeline-based, better for scroll-driven marketing sections than app state UI |
 
@@ -50,9 +51,10 @@ Suggested status mapping: pending → Yellow, paid → Green, overdue → Red. E
 
 ## Rollout order
 
-1. ✅ **DONE (2026-08-09, commit `7ae5b18`).** Motion + Kokonut UI on the existing authenticated app — palette applied across the whole app (index.css tokens, category/status color maps, chart hex, all remaining blue/purple sweeps); shared animated `Modal` (src/components/ui/Modal.tsx) replacing all 5 modals; Dashboard stat card count-up + staggered entrance; chart card entrances; Recent Invoices row stagger; Kokonut-inspired polish on Receipts dropzone + StatCard icon hover.
-2. **React Bits effects**, layered in selectively once the base styling feels right — a few standout moments, not a full redesign pass.
-3. **Aceternity-powered landing/marketing page** — separate build, own scope. GSAP available in reserve if the hero section wants extra scroll-driven drama.
+1. ✅ **DONE (2026-08-09, commits `7ae5b18`, `3c05dd9`).** Motion + Kokonut UI on the existing authenticated app — palette applied across the whole app (index.css tokens, category/status color maps, chart hex, all remaining blue/purple sweeps); shared animated `Modal` (src/components/ui/Modal.tsx) replacing all 5 modals; Dashboard stat card count-up + staggered entrance; chart card entrances; Recent Invoices row stagger; Kokonut-inspired polish on Receipts dropzone + StatCard icon hover; same stagger/hover treatment extended to Expenses, Invoices, and Receipts (tab cards, summary pills, table rows, mobile cards, gallery thumbnails).
+2. **React Bits effects**, layered in selectively once the base styling feels right — a few standout moments, not a full redesign pass. **In progress.**
+3. **Bklit UI chart swap** — replace Recharts in the 3 Dashboard chart components with Bklit UI's composable chart primitives, recolored to the current palette. Own focused pass since it's a real library swap, not additive.
+4. **Aceternity-powered landing/marketing page** — separate build, own scope. GSAP available in reserve if the hero section wants extra scroll-driven drama.
 
 ## Open items for the next session
 

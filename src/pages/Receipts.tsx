@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { Upload, FileText, Trash2, ExternalLink, ImageIcon } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { useReceipts, useUploadReceipt, useDeleteReceipt } from '@/hooks/useReceipts'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useLinkReceiptToExpense } from '@/hooks/useReceipts'
@@ -71,12 +72,12 @@ export default function Receipts() {
       title="Receipts"
       subtitle="Upload and manage your expense receipts"
       action={
-        <button
+        <PrimaryButton
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
+          className="px-4 py-2.5 rounded-xl text-sm font-medium"
         >
           <Upload className="w-4 h-4" /> Upload Receipt
-        </button>
+        </PrimaryButton>
       }
     >
       <input

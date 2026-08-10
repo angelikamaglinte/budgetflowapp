@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
 import { ExpenseForm } from '@/components/expenses/ExpenseForm'
 import type { ExpenseFormValues } from '@/components/expenses/ExpenseForm'
@@ -105,12 +106,12 @@ export default function Expenses() {
           >
             <Download className="w-4 h-4" /> Export
           </button>
-          <button
+          <PrimaryButton
             onClick={() => { setEditTarget(null); setFormOpen(true) }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
+            className="px-4 py-2.5 rounded-xl text-sm font-medium"
           >
             <Plus className="w-4 h-4" /> Add Expense
-          </button>
+          </PrimaryButton>
         </div>
       }
     >
