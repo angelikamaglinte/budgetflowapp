@@ -50,7 +50,7 @@ Suggested status mapping: pending → Yellow, paid → Green, overdue → Red. E
 
 ## Rollout order
 
-1. **Motion + Kokonut UI on the existing authenticated app** (Dashboard, Expenses, Invoices, forms) — lowest risk, reuses current structure, immediate visible payoff. **Start here.**
+1. ✅ **DONE (2026-08-09, commit `7ae5b18`).** Motion + Kokonut UI on the existing authenticated app — palette applied across the whole app (index.css tokens, category/status color maps, chart hex, all remaining blue/purple sweeps); shared animated `Modal` (src/components/ui/Modal.tsx) replacing all 5 modals; Dashboard stat card count-up + staggered entrance; chart card entrances; Recent Invoices row stagger; Kokonut-inspired polish on Receipts dropzone + StatCard icon hover.
 2. **React Bits effects**, layered in selectively once the base styling feels right — a few standout moments, not a full redesign pass.
 3. **Aceternity-powered landing/marketing page** — separate build, own scope. GSAP available in reserve if the hero section wants extra scroll-driven drama.
 

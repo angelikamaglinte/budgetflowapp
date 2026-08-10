@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
+import { motion } from 'motion/react'
 import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
@@ -115,9 +116,14 @@ export default function Expenses() {
     >
       {/* Summary cards / tabs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        {TABS.map((tab) => (
-          <button
+        {TABS.map((tab, i) => (
+          <motion.button
             key={tab.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: i * 0.05 }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               'text-left p-4 rounded-2xl border transition-all',
@@ -137,7 +143,7 @@ export default function Expenses() {
               ${tabTotals[tab.id].toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-gray-400 mt-0.5">{tabCounts[tab.id]} transactions</p>
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -181,7 +187,12 @@ export default function Expenses() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center py-16 gap-3"
+          >
             <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
               <Plus className="w-6 h-6 text-primary-400" />
             </div>
@@ -196,13 +207,19 @@ export default function Expenses() {
                 Add expense
               </button>
             )}
-          </div>
+          </motion.div>
         ) : (
           <>
             {/* Mobile card list */}
             <div className="sm:hidden flex flex-col divide-y divide-gray-50">
-              {filtered.map((exp) => (
-                <div key={exp.id} className="p-4 flex flex-col gap-2">
+              {filtered.map((exp, i) => (
+                <motion.div
+                  key={exp.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: Math.min(i, 15) * 0.02 }}
+                  className="p-4 flex flex-col gap-2"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900">{exp.title}</p>
@@ -242,7 +259,7 @@ export default function Expenses() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -263,8 +280,14 @@ export default function Expenses() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((exp) => (
-                    <tr key={exp.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  {filtered.map((exp, i) => (
+                    <motion.tr
+                      key={exp.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: Math.min(i, 15) * 0.02 }}
+                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                         {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                       </td>
@@ -309,7 +332,7 @@ export default function Expenses() {
                           </button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>

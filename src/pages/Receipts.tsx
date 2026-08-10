@@ -144,16 +144,25 @@ export default function Receipts() {
           ))}
         </div>
       ) : filteredReceipts.length === 0 ? (
-        <div className="text-center py-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="text-center py-12"
+        >
           <p className="text-gray-400 text-sm">
             {receipts.length === 0 ? 'No receipts uploaded yet' : 'No receipts for the selected period'}
           </p>
-        </div>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredReceipts.map((receipt) => (
-            <div
+          {filteredReceipts.map((receipt, i) => (
+            <motion.div
               key={receipt.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, delay: Math.min(i, 15) * 0.03 }}
+              whileHover={{ y: -3 }}
               className="group bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
             >
               {/* Thumbnail */}
@@ -219,7 +228,7 @@ export default function Receipts() {
                   ))}
                 </select>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

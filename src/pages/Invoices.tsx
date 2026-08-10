@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
+import { motion } from 'motion/react'
 import { Plus, Search, Pencil, Trash2, CheckCircle, Download } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
@@ -92,18 +93,28 @@ export default function Invoices() {
       {/* Summary pills */}
       {invoices.length > 0 && (
         <div className="flex gap-3 mb-5 flex-wrap">
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 rounded-xl text-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 rounded-xl text-sm"
+          >
             <span className="text-green-500 font-medium">Paid</span>
             <span className="font-bold text-green-700">
               ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: 0.05 }}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl text-sm"
+          >
             <span className="text-amber-500 font-medium">Pending</span>
             <span className="font-bold text-amber-700">
               ${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -139,20 +150,31 @@ export default function Invoices() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center py-16 gap-3"
+          >
             <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
               <Plus className="w-6 h-6 text-primary-400" />
             </div>
             <p className="text-gray-500 text-sm">
               {search || statusFilter ? 'No invoices match your filters' : 'No invoices yet — create your first one!'}
             </p>
-          </div>
+          </motion.div>
         ) : (
           <>
             {/* Mobile card list */}
             <div className="sm:hidden flex flex-col divide-y divide-gray-50">
-              {filtered.map((inv) => (
-                <div key={inv.id} className="p-4 flex flex-col gap-2">
+              {filtered.map((inv, i) => (
+                <motion.div
+                  key={inv.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: Math.min(i, 15) * 0.02 }}
+                  className="p-4 flex flex-col gap-2"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900">{inv.client_name}</p>
@@ -190,7 +212,7 @@ export default function Invoices() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -210,8 +232,14 @@ export default function Invoices() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((inv) => (
-                    <tr key={inv.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  {filtered.map((inv, i) => (
+                    <motion.tr
+                      key={inv.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: Math.min(i, 15) * 0.02 }}
+                      className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    >
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-gray-900">{inv.invoice_number}</span>
                       </td>
@@ -269,7 +297,7 @@ export default function Invoices() {
                           </button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
