@@ -9,6 +9,7 @@ import {
   TrendingUp,
   NotebookText,
   BarChart3,
+  Calculator,
   X,
 } from 'lucide-react'
 import { cn, getDisplayName } from '@/lib/utils'
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/expenses', label: 'Expenses', icon: CreditCard },
   { to: '/invoices', label: 'Invoices', icon: FileText },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/calculator', label: 'Calculator', icon: Calculator },
   { to: '/contacts', label: 'Contacts', icon: Users },
   { to: '/files', label: 'Files', icon: FolderOpen },
   { to: '/notes', label: 'Notes', icon: NotebookText },

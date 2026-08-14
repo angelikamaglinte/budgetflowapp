@@ -15,6 +15,10 @@ export type Contact = Database['public']['Tables']['contacts']['Row']
 export type ContactInsert = Database['public']['Tables']['contacts']['Insert']
 export type ContactUpdate = Database['public']['Tables']['contacts']['Update']
 
+export type PurchasePlan = Database['public']['Tables']['purchase_plans']['Row']
+export type PurchasePlanInsert = Database['public']['Tables']['purchase_plans']['Insert']
+export type PurchasePlanUpdate = Database['public']['Tables']['purchase_plans']['Update']
+
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
 export type FileCategory = 'contract' | 'invoice' | 'receipt' | 'other'

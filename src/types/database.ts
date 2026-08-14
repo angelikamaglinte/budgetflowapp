@@ -158,6 +158,32 @@ export interface Database {
           created_at?: string
         }
       }
+      purchase_plans: {
+        Row: {
+          id: string
+          user_id: string
+          item_name: string
+          price: number
+          target_date: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          item_name: string
+          price: number
+          target_date?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          item_name?: string
+          price?: number
+          target_date?: string | null
+          created_at?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

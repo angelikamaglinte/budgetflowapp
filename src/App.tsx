@@ -10,6 +10,7 @@ import Dashboard from '@/pages/Dashboard'
 import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
 import Reports from '@/pages/Reports'
+import Calculator from '@/pages/Calculator'
 import Contacts from '@/pages/Contacts'
 import Files from '@/pages/Files'
 import Notes from '@/pages/Notes'
@@ -62,6 +63,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/calculator"
+              element={
+                <ProtectedRoute>
+                  <Calculator />
                 </ProtectedRoute>
               }
             />
