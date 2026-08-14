@@ -1,11 +1,11 @@
 import { useRef, useState, useMemo } from 'react'
-import { format } from 'date-fns'
 import { motion } from 'motion/react'
-import { Upload, FileText, Trash2, ExternalLink, ImageIcon } from 'lucide-react'
+import { Upload, LayoutGrid, List } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
-import { FileTypeBadge } from '@/components/files/FileTypeBadge'
+import { FileGridView } from '@/components/files/FileGridView'
+import { FileListView } from '@/components/files/FileListView'
 import { useFiles, useUploadFile, useDeleteFile, useLinkFileToExpense } from '@/hooks/useFiles'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useAuth } from '@/contexts/AuthContext'
@@ -14,11 +14,8 @@ import { cn } from '@/lib/utils'
 import type { Receipt, FileCategory } from '@/types'
 import { FILE_CATEGORY_LABELS } from '@/types'
 
-function isImage(filename: string) {
-  return /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(filename)
-}
-
 type TabType = 'all' | FileCategory
+type ViewMode = 'grid' | 'list'
 
 const TABS: { id: TabType; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -29,6 +26,11 @@ const TABS: { id: TabType; label: string }[] = [
 ]
 
 const UPLOAD_CATEGORIES: FileCategory[] = ['receipt', 'contract', 'invoice', 'other']
+
+function getInitialViewMode(): ViewMode {
+  if (typeof window === 'undefined') return 'grid'
+  return localStorage.getItem('files-view-mode') === 'list' ? 'list' : 'grid'
+}
 
 export default function Files() {
   const { user } = useAuth()
@@ -41,6 +43,12 @@ export default function Files() {
   const { periodFilter } = usePeriod()
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [uploadCategory, setUploadCategory] = useState<FileCategory>('receipt')
+  const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode)
+
+  function changeViewMode(mode: ViewMode) {
+    setViewMode(mode)
+    localStorage.setItem('files-view-mode', mode)
+  }
 
   const filteredFiles = useMemo(() => {
     return files.filter((f) => {
@@ -112,22 +120,47 @@ export default function Files() {
         onChange={(e) => void handleFiles(e.target.files)}
       />
 
-      {/* Category filter tabs */}
-      <div className="flex gap-2 mb-5 flex-wrap">
-        {TABS.map((tab) => (
+      {/* Category filter tabs + view toggle */}
+      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'px-3.5 py-2 rounded-xl text-sm font-medium transition-all border',
+                activeTab === tab.id
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 p-1 bg-white border border-gray-200 rounded-xl shrink-0">
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => changeViewMode('grid')}
+            title="Grid view"
             className={cn(
-              'px-3.5 py-2 rounded-xl text-sm font-medium transition-all border',
-              activeTab === tab.id
-                ? 'bg-primary-600 text-white border-primary-600'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+              'p-1.5 rounded-lg transition-all',
+              viewMode === 'grid' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-700'
             )}
           >
-            {tab.label}
+            <LayoutGrid className="w-4 h-4" />
           </button>
-        ))}
+          <button
+            onClick={() => changeViewMode('list')}
+            title="List view"
+            className={cn(
+              'p-1.5 rounded-lg transition-all',
+              viewMode === 'list' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-700'
+            )}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Upload category picker */}
@@ -199,7 +232,7 @@ export default function Files() {
         </div>
       )}
 
-      {/* Gallery */}
+      {/* Files */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -217,88 +250,20 @@ export default function Files() {
             {files.length === 0 ? 'No files uploaded yet' : 'No files match this filter'}
           </p>
         </motion.div>
+      ) : viewMode === 'grid' ? (
+        <FileGridView
+          files={filteredFiles}
+          expenses={expenses}
+          onDelete={setDeleteTarget}
+          onLinkChange={(fileId, expenseId) => void handleLinkChange(fileId, expenseId)}
+        />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredFiles.map((file, i) => (
-            <motion.div
-              key={file.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: Math.min(i, 15) * 0.03 }}
-              whileHover={{ y: -3 }}
-              className="group bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)] transition-shadow"
-            >
-              {/* Thumbnail */}
-              <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                {isImage(file.filename) ? (
-                  <img
-                    src={file.public_url}
-                    alt={file.filename}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                    <FileText className="w-10 h-10 text-gray-300" />
-                    <span className="text-xs text-gray-400 uppercase font-medium">PDF</span>
-                  </div>
-                )}
-
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <a
-                    href={file.public_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 bg-white/90 rounded-lg hover:bg-white transition"
-                    title="View"
-                  >
-                    {isImage(file.filename)
-                      ? <ImageIcon className="w-4 h-4 text-gray-700" />
-                      : <ExternalLink className="w-4 h-4 text-gray-700" />
-                    }
-                  </a>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(file) }}
-                    className="p-2 bg-white/90 rounded-lg hover:bg-red-50 transition"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-3">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <p className="text-xs font-medium text-gray-700 truncate" title={file.filename}>
-                    {file.filename}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <FileTypeBadge category={file.category} />
-                  <p className="text-xs text-gray-400 shrink-0">
-                    {format(new Date(file.uploaded_at), 'MMM d, yyyy')}
-                  </p>
-                </div>
-                {/* Link to expense */}
-                <select
-                  value={file.expense_id ?? ''}
-                  onChange={(e) => void handleLinkChange(file.id, e.target.value)}
-                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
-                  title="Link to expense"
-                >
-                  <option value="">Link to expense...</option>
-                  {expenses.map((exp) => (
-                    <option key={exp.id} value={exp.id}>
-                      {exp.title} (${exp.amount})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <FileListView
+          files={filteredFiles}
+          expenses={expenses}
+          onDelete={setDeleteTarget}
+          onLinkChange={(fileId, expenseId) => void handleLinkChange(fileId, expenseId)}
+        />
       )}
 
       {/* Delete confirmation */}
