@@ -14,7 +14,16 @@ export function useFiles() {
         .select('*')
         .order('uploaded_at', { ascending: false })
       if (error) throw error
-      return (data ?? []) as Receipt[]
+      const rows = (data ?? []) as Receipt[]
+      if (rows.length === 0) return rows
+
+      const { data: signedUrls } = await supabase.storage
+        .from('receipts')
+        .createSignedUrls(rows.map((r) => r.storage_path), 3600)
+      const urlByPath = new Map(
+        (signedUrls ?? []).filter((s) => !s.error).map((s) => [s.path, s.signedUrl])
+      )
+      return rows.map((r) => ({ ...r, public_url: urlByPath.get(r.storage_path) ?? r.public_url }))
     },
   })
 }
@@ -42,7 +51,10 @@ export function useUploadFile() {
         .upload(storagePath, file)
       if (uploadError) throw uploadError
 
-      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(storagePath)
+      const { data: signedData, error: signError } = await supabase.storage
+        .from('receipts')
+        .createSignedUrl(storagePath, 3600)
+      if (signError) throw signError
 
       const { data, error: dbError } = await supabase
         .from('receipts')
@@ -50,7 +62,7 @@ export function useUploadFile() {
           user_id: userId,
           filename: file.name,
           storage_path: storagePath,
-          public_url: urlData.publicUrl,
+          public_url: signedData.signedUrl,
           expense_id: expenseId ?? null,
           category,
         })
