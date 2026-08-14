@@ -1,31 +1,54 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
 import { Upload, FileText, Trash2, ExternalLink, ImageIcon } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
-import { useReceipts, useUploadReceipt, useDeleteReceipt } from '@/hooks/useReceipts'
+import { FileTypeBadge } from '@/components/files/FileTypeBadge'
+import { useFiles, useUploadFile, useDeleteFile, useLinkFileToExpense } from '@/hooks/useFiles'
 import { useExpenses } from '@/hooks/useExpenses'
-import { useLinkReceiptToExpense } from '@/hooks/useReceipts'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
-import type { Receipt } from '@/types'
+import { cn } from '@/lib/utils'
+import type { Receipt, FileCategory } from '@/types'
+import { FILE_CATEGORY_LABELS } from '@/types'
 
 function isImage(filename: string) {
   return /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(filename)
 }
 
-export default function Receipts() {
+type TabType = 'all' | FileCategory
+
+const TABS: { id: TabType; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'contract', label: 'Contracts' },
+  { id: 'invoice', label: 'Invoices' },
+  { id: 'receipt', label: 'Receipts' },
+  { id: 'other', label: 'Other' },
+]
+
+const UPLOAD_CATEGORIES: FileCategory[] = ['receipt', 'contract', 'invoice', 'other']
+
+export default function Files() {
   const { user } = useAuth()
-  const { data: receipts = [], isLoading } = useReceipts()
+  const { data: files = [], isLoading } = useFiles()
   const { data: expenses = [] } = useExpenses()
-  const uploadReceipt = useUploadReceipt()
-  const deleteReceipt = useDeleteReceipt()
-  const linkReceipt = useLinkReceiptToExpense()
+  const uploadFile = useUploadFile()
+  const deleteFile = useDeleteFile()
+  const linkFile = useLinkFileToExpense()
 
   const { periodFilter } = usePeriod()
-  const filteredReceipts = receipts.filter((r) => matchesPeriod(r.uploaded_at, periodFilter))
+  const [activeTab, setActiveTab] = useState<TabType>('all')
+  const [uploadCategory, setUploadCategory] = useState<FileCategory>('receipt')
+
+  const filteredFiles = useMemo(() => {
+    return files.filter((f) => {
+      const matchPeriod = matchesPeriod(f.uploaded_at, periodFilter)
+      const matchTab = activeTab === 'all' || f.category === activeTab
+      return matchPeriod && matchTab
+    })
+  }, [files, periodFilter, activeTab])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -33,17 +56,17 @@ export default function Receipts() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || !user) return
+  async function handleFiles(fileList: FileList | null) {
+    if (!fileList || !user) return
     setUploadError(null)
     setUploading(true)
     try {
-      for (const file of Array.from(files)) {
+      for (const file of Array.from(fileList)) {
         if (file.size > 10 * 1024 * 1024) {
           setUploadError(`${file.name} is too large (max 10MB)`)
           continue
         }
-        await uploadReceipt.mutateAsync({ file, userId: user.id })
+        await uploadFile.mutateAsync({ file, category: uploadCategory, userId: user.id })
       }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed')
@@ -58,25 +81,25 @@ export default function Receipts() {
     void handleFiles(e.dataTransfer.files)
   }
 
-  async function handleDelete(receipt: Receipt) {
-    await deleteReceipt.mutateAsync({ id: receipt.id, storagePath: receipt.storage_path })
+  async function handleDelete(file: Receipt) {
+    await deleteFile.mutateAsync({ id: file.id, storagePath: file.storage_path })
     setDeleteTarget(null)
   }
 
-  async function handleLinkChange(receiptId: string, expenseId: string) {
-    await linkReceipt.mutateAsync({ receiptId, expenseId: expenseId || null })
+  async function handleLinkChange(fileId: string, expenseId: string) {
+    await linkFile.mutateAsync({ fileId, expenseId: expenseId || null })
   }
 
   return (
     <AppLayout
-      title="Receipts"
-      subtitle="Upload and manage your expense receipts"
+      title="Files"
+      subtitle="Every file you've uploaded, sorted by type"
       action={
         <PrimaryButton
           onClick={() => fileInputRef.current?.click()}
           className="px-4 py-2.5 rounded-xl text-sm font-medium"
         >
-          <Upload className="w-4 h-4" /> Upload Receipt
+          <Upload className="w-4 h-4" /> Upload File
         </PrimaryButton>
       }
     >
@@ -88,6 +111,45 @@ export default function Receipts() {
         className="hidden"
         onChange={(e) => void handleFiles(e.target.files)}
       />
+
+      {/* Category filter tabs */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'px-3.5 py-2 rounded-xl text-sm font-medium transition-all border',
+              activeTab === tab.id
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Upload category picker */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <span className="text-xs font-medium text-gray-500">Upload as:</span>
+        <div className="flex gap-1.5 flex-wrap">
+          {UPLOAD_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setUploadCategory(cat)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
+                uploadCategory === cat
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+              )}
+            >
+              {FILE_CATEGORY_LABELS[cat]}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Drop zone */}
       <motion.div
@@ -123,7 +185,7 @@ export default function Receipts() {
           ) : (
             <>
               <p className="text-sm font-medium text-gray-700">
-                {dragOver ? 'Drop files here' : 'Drag & drop files here, or click to browse'}
+                {dragOver ? 'Drop files here' : `Drag & drop files here, or click to browse (will be tagged as ${FILE_CATEGORY_LABELS[uploadCategory]})`}
               </p>
               <p className="text-xs text-gray-400">Supports JPG, PNG, PDF · Max 10MB per file</p>
             </>
@@ -144,7 +206,7 @@ export default function Receipts() {
             <div key={i} className="aspect-square bg-white rounded-2xl animate-pulse" />
           ))}
         </div>
-      ) : filteredReceipts.length === 0 ? (
+      ) : filteredFiles.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -152,14 +214,14 @@ export default function Receipts() {
           className="text-center py-12"
         >
           <p className="text-gray-400 text-sm">
-            {receipts.length === 0 ? 'No receipts uploaded yet' : 'No receipts for the selected period'}
+            {files.length === 0 ? 'No files uploaded yet' : 'No files match this filter'}
           </p>
         </motion.div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredReceipts.map((receipt, i) => (
+          {filteredFiles.map((file, i) => (
             <motion.div
-              key={receipt.id}
+              key={file.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, delay: Math.min(i, 15) * 0.03 }}
@@ -168,10 +230,10 @@ export default function Receipts() {
             >
               {/* Thumbnail */}
               <div className="aspect-square bg-gray-50 relative overflow-hidden">
-                {isImage(receipt.filename) ? (
+                {isImage(file.filename) ? (
                   <img
-                    src={receipt.public_url}
-                    alt={receipt.filename}
+                    src={file.public_url}
+                    alt={file.filename}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -184,20 +246,20 @@ export default function Receipts() {
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <a
-                    href={receipt.public_url}
+                    href={file.public_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="p-2 bg-white/90 rounded-lg hover:bg-white transition"
                     title="View"
                   >
-                    {isImage(receipt.filename)
+                    {isImage(file.filename)
                       ? <ImageIcon className="w-4 h-4 text-gray-700" />
                       : <ExternalLink className="w-4 h-4 text-gray-700" />
                     }
                   </a>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(receipt) }}
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(file) }}
                     className="p-2 bg-white/90 rounded-lg hover:bg-red-50 transition"
                     title="Delete"
                   >
@@ -208,16 +270,21 @@ export default function Receipts() {
 
               {/* Info */}
               <div className="p-3">
-                <p className="text-xs font-medium text-gray-700 truncate mb-1" title={receipt.filename}>
-                  {receipt.filename}
-                </p>
-                <p className="text-xs text-gray-400 mb-2">
-                  {format(new Date(receipt.uploaded_at), 'MMM d, yyyy')}
-                </p>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <p className="text-xs font-medium text-gray-700 truncate" title={file.filename}>
+                    {file.filename}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <FileTypeBadge category={file.category} />
+                  <p className="text-xs text-gray-400 shrink-0">
+                    {format(new Date(file.uploaded_at), 'MMM d, yyyy')}
+                  </p>
+                </div>
                 {/* Link to expense */}
                 <select
-                  value={receipt.expense_id ?? ''}
-                  onChange={(e) => void handleLinkChange(receipt.id, e.target.value)}
+                  value={file.expense_id ?? ''}
+                  onChange={(e) => void handleLinkChange(file.id, e.target.value)}
                   className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
                   title="Link to expense"
                 >
@@ -237,7 +304,7 @@ export default function Receipts() {
       {/* Delete confirmation */}
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="max-w-sm">
         <div className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-2">Delete receipt?</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">Delete file?</h3>
           <p className="text-sm text-gray-500 mb-1">
             <span className="font-medium text-gray-700">{deleteTarget?.filename}</span> will be permanently removed.
           </p>

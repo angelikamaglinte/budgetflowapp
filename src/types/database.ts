@@ -103,6 +103,7 @@ export interface Database {
           public_url: string
           expense_id: string | null
           uploaded_at: string
+          category: string
         }
         Insert: {
           id?: string
@@ -112,6 +113,7 @@ export interface Database {
           public_url: string
           expense_id?: string | null
           uploaded_at?: string
+          category?: string
         }
         Update: {
           id?: string
@@ -121,6 +123,39 @@ export interface Database {
           public_url?: string
           expense_id?: string | null
           uploaded_at?: string
+          category?: string
+        }
+      }
+      contacts: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          email: string | null
+          phone: string | null
+          company: string | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          company?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          company?: string | null
+          notes?: string | null
+          created_at?: string
         }
       }
     }

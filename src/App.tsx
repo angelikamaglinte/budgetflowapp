@@ -10,7 +10,8 @@ import Dashboard from '@/pages/Dashboard'
 import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
 import Reports from '@/pages/Reports'
-import Receipts from '@/pages/Receipts'
+import Contacts from '@/pages/Contacts'
+import Files from '@/pages/Files'
 import Notes from '@/pages/Notes'
 
 const queryClient = new QueryClient({
@@ -65,13 +66,22 @@ export default function App() {
               }
             />
             <Route
-              path="/receipts"
+              path="/contacts"
               element={
                 <ProtectedRoute>
-                  <Receipts />
+                  <Contacts />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/files"
+              element={
+                <ProtectedRoute>
+                  <Files />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/receipts" element={<Navigate to="/files" replace />} />
             <Route
               path="/notes"
               element={

@@ -11,8 +11,13 @@ export type InvoiceUpdate = Database['public']['Tables']['invoices']['Update']
 export type Receipt = Database['public']['Tables']['receipts']['Row']
 export type ReceiptInsert = Database['public']['Tables']['receipts']['Insert']
 
+export type Contact = Database['public']['Tables']['contacts']['Row']
+export type ContactInsert = Database['public']['Tables']['contacts']['Insert']
+export type ContactUpdate = Database['public']['Tables']['contacts']['Update']
+
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
+export type FileCategory = 'contract' | 'invoice' | 'receipt' | 'other'
 
 export const EXPENSE_TYPE_COLORS: Record<ExpenseType, string> = {
   business: 'bg-[#E9F3F7] text-[#487CA5]',
@@ -74,4 +79,18 @@ export const STATUS_COLORS: Record<InvoiceStatus, string> = {
   pending: 'bg-[#FAF3DD] text-[#C29343]', // Yellow
   paid: 'bg-[#EEF3ED] text-[#548164]', // Green
   overdue: 'bg-[#FAECEC] text-[#C4554D]', // Red
+}
+
+export const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {
+  contract: 'Contract',
+  invoice: 'Invoice',
+  receipt: 'Receipt',
+  other: 'Other',
+}
+
+export const FILE_CATEGORY_COLORS: Record<FileCategory, string> = {
+  contract: 'bg-[#F6F3F8] text-[#8A67AB]', // Purple
+  invoice: 'bg-[#E9F3F7] text-[#487CA5]', // Blue
+  receipt: 'bg-[#EEF3ED] text-[#548164]', // Green
+  other: 'bg-[#F1F1EF] text-[#787774]', // Gray
 }

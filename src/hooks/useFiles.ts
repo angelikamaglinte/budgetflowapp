@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Receipt } from '@/types'
+import type { Receipt, FileCategory } from '@/types'
 
-export function useReceipts() {
+export function useFiles() {
   const { user } = useAuth()
   return useQuery<Receipt[]>({
-    queryKey: ['receipts'],
+    queryKey: ['files'],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -19,15 +19,17 @@ export function useReceipts() {
   })
 }
 
-export function useUploadReceipt() {
+export function useUploadFile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({
       file,
+      category,
       expenseId,
       userId,
     }: {
       file: File
+      category: FileCategory
       expenseId?: string
       userId: string
     }) => {
@@ -50,6 +52,7 @@ export function useUploadReceipt() {
           storage_path: storagePath,
           public_url: urlData.publicUrl,
           expense_id: expenseId ?? null,
+          category,
         })
         .select()
         .single()
@@ -57,12 +60,12 @@ export function useUploadReceipt() {
       return data as Receipt
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['receipts'] })
+      void queryClient.invalidateQueries({ queryKey: ['files'] })
     },
   })
 }
 
-export function useDeleteReceipt() {
+export function useDeleteFile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, storagePath }: { id: string; storagePath: string }) => {
@@ -71,23 +74,23 @@ export function useDeleteReceipt() {
       if (error) throw error
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['receipts'] })
+      void queryClient.invalidateQueries({ queryKey: ['files'] })
     },
   })
 }
 
-export function useLinkReceiptToExpense() {
+export function useLinkFileToExpense() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ receiptId, expenseId }: { receiptId: string; expenseId: string | null }) => {
+    mutationFn: async ({ fileId, expenseId }: { fileId: string; expenseId: string | null }) => {
       const { error } = await supabase
         .from('receipts')
         .update({ expense_id: expenseId })
-        .eq('id', receiptId)
+        .eq('id', fileId)
       if (error) throw error
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['receipts'] })
+      void queryClient.invalidateQueries({ queryKey: ['files'] })
     },
   })
 }

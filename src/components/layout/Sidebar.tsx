@@ -4,7 +4,8 @@ import {
   LayoutDashboard,
   CreditCard,
   FileText,
-  Receipt,
+  FolderOpen,
+  Users,
   TrendingUp,
   NotebookText,
   BarChart3,
@@ -19,7 +20,8 @@ const navItems = [
   { to: '/expenses', label: 'Expenses', icon: CreditCard },
   { to: '/invoices', label: 'Invoices', icon: FileText },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/receipts', label: 'Receipts', icon: Receipt },
+  { to: '/contacts', label: 'Contacts', icon: Users },
+  { to: '/files', label: 'Files', icon: FolderOpen },
   { to: '/notes', label: 'Notes', icon: NotebookText },
 ]
 
