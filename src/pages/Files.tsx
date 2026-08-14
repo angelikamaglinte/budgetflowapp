@@ -1,9 +1,14 @@
 import { useRef, useState, useMemo } from 'react'
 import { motion } from 'motion/react'
-import { Upload, LayoutGrid, List } from 'lucide-react'
+import { Upload, LayoutGrid, List, ChevronDown } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
-import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { FileGridView } from '@/components/files/FileGridView'
 import { FileListView } from '@/components/files/FileListView'
 import { useFiles, useUploadFile, useDeleteFile, useLinkFileToExpense } from '@/hooks/useFiles'
@@ -44,6 +49,7 @@ export default function Files() {
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [uploadCategory, setUploadCategory] = useState<FileCategory>('receipt')
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode)
+  const [uploadMenuOpen, setUploadMenuOpen] = useState(false)
 
   function changeViewMode(mode: ViewMode) {
     setViewMode(mode)
@@ -59,7 +65,6 @@ export default function Files() {
   }, [files, periodFilter, activeTab])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [dragOver, setDragOver] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Receipt | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -83,12 +88,6 @@ export default function Files() {
     }
   }
 
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragOver(false)
-    void handleFiles(e.dataTransfer.files)
-  }
-
   async function handleDelete(file: Receipt) {
     await deleteFile.mutateAsync({ id: file.id, storagePath: file.storage_path })
     setDeleteTarget(null)
@@ -98,17 +97,49 @@ export default function Files() {
     await linkFile.mutateAsync({ fileId, expenseId: expenseId || null })
   }
 
+  function startUpload(category: FileCategory) {
+    setUploadCategory(category)
+    fileInputRef.current?.click()
+  }
+
   return (
     <AppLayout
       title="Files"
       subtitle="Every file you've uploaded, sorted by type"
       action={
-        <PrimaryButton
-          onClick={() => fileInputRef.current?.click()}
-          className="px-4 py-2.5 rounded-xl text-sm font-medium"
-        >
-          <Upload className="w-4 h-4" /> Upload File
-        </PrimaryButton>
+        <DropdownMenu onOpenChange={setUploadMenuOpen}>
+          <DropdownMenuTrigger
+            render={
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
+              />
+            }
+          >
+            <Upload className="w-4 h-4" /> Upload File
+            <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', uploadMenuOpen && 'rotate-180')} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-44 rounded-2xl border border-gray-100 bg-white/95 p-2 shadow-xl backdrop-blur-sm data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            sideOffset={8}
+          >
+            {UPLOAD_CATEGORIES.map((cat) => (
+              <DropdownMenuItem
+                key={cat}
+                render={
+                  <button
+                    type="button"
+                    onClick={() => startUpload(cat)}
+                    className="flex w-full cursor-pointer items-center rounded-xl border border-transparent p-2.5 text-sm text-gray-700 transition-all duration-200 hover:border-gray-100 hover:bg-gray-50 hover:text-gray-900"
+                  />
+                }
+              >
+                {FILE_CATEGORY_LABELS[cat]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       }
     >
       <input
@@ -163,68 +194,21 @@ export default function Files() {
         </div>
       </div>
 
-      {/* Upload category picker */}
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <span className="text-xs font-medium text-gray-500">Upload as:</span>
-        <div className="flex gap-1.5 flex-wrap">
-          {UPLOAD_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setUploadCategory(cat)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
-                uploadCategory === cat
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-              )}
-            >
-              {FILE_CATEGORY_LABELS[cat]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Drop zone */}
-      <motion.div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
-        animate={{
-          borderColor: dragOver ? '#142127' : '#e5e7eb',
-          backgroundColor: dragOver ? '#faf8f5' : '#ffffff',
-          scale: dragOver ? 1.01 : 1,
-        }}
-        whileHover={{ scale: 1.005 }}
-        transition={{ duration: 0.2 }}
-        className="mb-6 border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer"
-      >
-        <div className="flex flex-col items-center gap-3">
-          <motion.div
-            animate={{ scale: dragOver ? 1.15 : 1, rotate: dragOver ? -8 : 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center ${dragOver ? 'bg-primary-100' : 'bg-gray-100'}`}
+      {uploading && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 bg-primary-50 border border-primary-100 text-primary-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2"
+        >
+          <motion.span
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.2, repeat: Infinity }}
+            className="font-medium"
           >
-            <Upload className={`w-6 h-6 ${dragOver ? 'text-primary-600' : 'text-gray-400'}`} />
-          </motion.div>
-          {uploading ? (
-            <motion.p
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1.2, repeat: Infinity }}
-              className="text-sm text-primary-600 font-medium"
-            >
-              Uploading...
-            </motion.p>
-          ) : (
-            <>
-              <p className="text-sm font-medium text-gray-700">
-                {dragOver ? 'Drop files here' : `Drag & drop files here, or click to browse (will be tagged as ${FILE_CATEGORY_LABELS[uploadCategory]})`}
-              </p>
-              <p className="text-xs text-gray-400">Supports JPG, PNG, PDF · Max 10MB per file</p>
-            </>
-          )}
-        </div>
-      </motion.div>
+            Uploading...
+          </motion.span>
+        </motion.div>
+      )}
 
       {uploadError && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
