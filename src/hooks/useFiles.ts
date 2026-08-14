@@ -18,7 +18,7 @@ export function useFiles() {
       if (rows.length === 0) return rows
 
       const { data: signedUrls } = await supabase.storage
-        .from('receipts')
+        .from('files')
         .createSignedUrls(rows.map((r) => r.storage_path), 3600)
       const urlByPath = new Map(
         (signedUrls ?? []).filter((s) => !s.error).map((s) => [s.path, s.signedUrl])
@@ -47,12 +47,12 @@ export function useUploadFile() {
       const storagePath = `${userId}/${filename}`
 
       const { error: uploadError } = await supabase.storage
-        .from('receipts')
+        .from('files')
         .upload(storagePath, file)
       if (uploadError) throw uploadError
 
       const { data: signedData, error: signError } = await supabase.storage
-        .from('receipts')
+        .from('files')
         .createSignedUrl(storagePath, 3600)
       if (signError) throw signError
 
@@ -81,7 +81,7 @@ export function useDeleteFile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, storagePath }: { id: string; storagePath: string }) => {
-      await supabase.storage.from('receipts').remove([storagePath])
+      await supabase.storage.from('files').remove([storagePath])
       const { error } = await supabase.from('receipts').delete().eq('id', id)
       if (error) throw error
     },
