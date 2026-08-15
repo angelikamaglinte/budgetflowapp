@@ -1,0 +1,168 @@
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { motion } from 'motion/react'
+import { Check } from 'lucide-react'
+import { AppLayout } from '@/components/layout/AppLayout'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { useAuth } from '@/contexts/AuthContext'
+import { useAllocation } from '@/contexts/AllocationContext'
+import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
+
+const settingsSchema = z.object({
+  business_name: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Enter a valid email').optional().or(z.literal('')),
+  tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
+  savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
+})
+
+type SettingsFormValues = z.infer<typeof settingsSchema>
+
+export default function Settings() {
+  const { user } = useAuth()
+  const { refresh: refreshAllocation } = useAllocation()
+  const { data: profile, isLoading } = useBusinessProfile()
+  const saveProfile = useSaveBusinessProfile()
+  const [saved, setSaved] = useState(false)
+
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
+    resolver: zodResolver(settingsSchema) as Resolver<SettingsFormValues>,
+    defaultValues: { business_name: '', address: '', phone: '', email: '', tax_rate: 20, savings_rate: 10 },
+  })
+
+  useEffect(() => {
+    if (!isLoading) {
+      reset({
+        business_name: profile?.business_name ?? '',
+        address: profile?.address ?? '',
+        phone: profile?.phone ?? '',
+        email: profile?.email ?? '',
+        tax_rate: profile?.tax_rate ?? 20,
+        savings_rate: profile?.savings_rate ?? 10,
+      })
+    }
+  }, [isLoading, profile, reset])
+
+  async function onSubmit(values: SettingsFormValues) {
+    setSaved(false)
+    await saveProfile.mutateAsync({
+      user_id: user!.id,
+      business_name: values.business_name || null,
+      address: values.address || null,
+      phone: values.phone || null,
+      email: values.email || null,
+      tax_rate: values.tax_rate,
+      savings_rate: values.savings_rate,
+      onboarding_completed: true,
+    })
+    await refreshAllocation()
+    setSaved(true)
+  }
+
+  return (
+    <AppLayout title="Settings" subtitle="Your business info and allocation rates" showPeriodSelector={false}>
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl flex flex-col gap-6">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Business Info</h2>
+          <p className="text-xs text-gray-400 mb-4">Appears at the top of every invoice PDF you generate.</p>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Business / Your Name</label>
+              <input
+                {...register('business_name')}
+                placeholder="Marie Angelika Maglinte"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
+              <textarea
+                {...register('address')}
+                rows={2}
+                placeholder="1405 - 615 6 AVE SE, Calgary, AB, T2G 1S2"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                <input
+                  {...register('phone')}
+                  placeholder="587 703 4351"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <input
+                  {...register('email')}
+                  type="email"
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Allocation Rates</h2>
+          <p className="text-xs text-gray-400 mb-4">Used to calculate your Tax Reserve and Savings on the Dashboard.</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-semibold text-gray-900">Tax Reserve</p>
+              <div className="flex items-center gap-2">
+                <input
+                  {...register('tax_rate')}
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </div>
+            </div>
+            {errors.tax_rate && <p className="text-xs text-red-600 text-right">{errors.tax_rate.message}</p>}
+            <div className="h-px bg-gray-50" />
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-semibold text-gray-900">Personal Savings</p>
+              <div className="flex items-center gap-2">
+                <input
+                  {...register('savings_rate')}
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </div>
+            </div>
+            {errors.savings_rate && <p className="text-xs text-red-600 text-right">{errors.savings_rate.message}</p>}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <PrimaryButton type="submit" disabled={isSubmitting} className="px-5 py-2.5 rounded-xl text-sm font-medium">
+            {isSubmitting ? 'Saving...' : 'Save Settings'}
+          </PrimaryButton>
+          {saved && (
+            <motion.span
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-1.5 text-sm text-[#548164]"
+            >
+              <Check className="w-4 h-4" /> Saved
+            </motion.span>
+          )}
+        </div>
+      </form>
+    </AppLayout>
+  )
+}

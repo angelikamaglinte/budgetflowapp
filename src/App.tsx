@@ -6,6 +6,7 @@ import { AllocationProvider } from '@/contexts/AllocationContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import Login from '@/pages/auth/Login'
 import Signup from '@/pages/auth/Signup'
+import Onboarding from '@/pages/auth/Onboarding'
 import Dashboard from '@/pages/Dashboard'
 import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
@@ -16,6 +17,7 @@ import Tools from '@/pages/Tools'
 import Contacts from '@/pages/Contacts'
 import Files from '@/pages/Files'
 import Notes from '@/pages/Notes'
+import Settings from '@/pages/Settings'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +38,14 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
@@ -114,6 +124,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Notes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

@@ -1,214 +1,126 @@
 import { useState } from 'react'
+import { motion } from 'motion/react'
+import { Plus, StickyNote } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { useAllocation } from '@/contexts/AllocationContext'
+import { Modal } from '@/components/ui/Modal'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { NoteForm } from '@/components/notes/NoteForm'
+import type { NoteFormValues } from '@/components/notes/NoteForm'
+import { NoteCard } from '@/components/notes/NoteCard'
+import { useNotes, useAddNote, useUpdateNote, useDeleteNote } from '@/hooks/useNotes'
+import { useAuth } from '@/contexts/AuthContext'
+import type { Note } from '@/types'
 
 export default function Notes() {
-  const { taxRate, savingsRate, setTaxRate, setSavingsRate } = useAllocation()
-  const [taxInput, setTaxInput] = useState(String(taxRate))
-  const [savingsInput, setSavingsInput] = useState(String(savingsRate))
+  const { user } = useAuth()
+  const { data: notes = [], isLoading } = useNotes()
+  const addNote = useAddNote()
+  const updateNote = useUpdateNote()
+  const deleteNote = useDeleteNote()
 
-  function handleTaxBlur() {
-    const val = parseFloat(taxInput)
-    if (!isNaN(val) && val > 0 && val <= 100) setTaxRate(val)
-    else setTaxInput(String(taxRate))
+  const [formOpen, setFormOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<Note | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  async function handleSubmit(values: NoteFormValues) {
+    if (editTarget) {
+      await updateNote.mutateAsync({ id: editTarget.id, ...values })
+    } else {
+      await addNote.mutateAsync({ ...values, user_id: user!.id })
+    }
+    setFormOpen(false)
+    setEditTarget(null)
   }
 
-  function handleSavingsBlur() {
-    const val = parseFloat(savingsInput)
-    if (!isNaN(val) && val > 0 && val <= 100) setSavingsRate(val)
-    else setSavingsInput(String(savingsRate))
+  function openEdit(note: Note) {
+    setEditTarget(note)
+    setFormOpen(true)
   }
+
+  async function handleDelete(id: string) {
+    await deleteNote.mutateAsync(id)
+    setDeleteId(null)
+  }
+
   return (
-    <AppLayout title="Notes" subtitle="Your contractor budgeting system reference">
-      <div className="max-w-2xl flex flex-col gap-6">
+    <AppLayout
+      title="Notes"
+      subtitle="Private to your account"
+      showPeriodSelector={false}
+      action={
+        <PrimaryButton
+          onClick={() => { setEditTarget(null); setFormOpen(true) }}
+          className="px-4 py-2.5 rounded-xl text-sm font-medium"
+        >
+          <Plus className="w-4 h-4" /> New Note
+        </PrimaryButton>
+      }
+    >
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl p-5 h-40 animate-pulse" />
+          ))}
+        </div>
+      ) : notes.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col items-center justify-center py-16 gap-3"
+        >
+          <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
+            <StickyNote className="w-6 h-6 text-primary-400" />
+          </div>
+          <p className="text-gray-500 text-sm">No notes yet</p>
+          <button
+            onClick={() => { setEditTarget(null); setFormOpen(true) }}
+            className="text-primary-600 text-sm font-medium hover:underline"
+          >
+            Add a note
+          </button>
+        </motion.div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {notes.map((note, i) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              delay={Math.min(i, 15) * 0.05}
+              onOpen={() => openEdit(note)}
+              onDelete={() => setDeleteId(note.id)}
+            />
+          ))}
+        </div>
+      )}
 
-        {/* Budgeting Rule */}
-        <div className="bg-[#E9F3F7] border border-[#D5E7EE] rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-[#2E5570] uppercase tracking-wider mb-3">Budgeting Rule</h2>
-          <p className="text-sm text-[#1E3A4D] font-medium mb-2">
-            Income received <span className="underline">this month</span> = Pay <span className="underline">this month's</span> expenses
-          </p>
-          <div className="flex flex-col gap-1 mt-3">
-            <p className="text-sm text-[#487CA5]">• January work → Paid in February → Covers February expenses</p>
-            <p className="text-sm text-[#487CA5]">• February work → Paid in March → Covers March expenses</p>
+      <NoteForm
+        open={formOpen}
+        onClose={() => { setFormOpen(false); setEditTarget(null) }}
+        onSubmit={handleSubmit}
+        initial={editTarget ?? undefined}
+      />
+
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">
+        <div className="p-6">
+          <h3 className="font-semibold text-gray-900 mb-2">Delete this note?</h3>
+          <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDeleteId(null)}
+              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteId && void handleDelete(deleteId)}
+              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
+            >
+              Delete
+            </button>
           </div>
         </div>
-
-        {/* Payment Schedule */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Payment Schedule</h2>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-semibold text-gray-900">Satori BLP</p>
-              <p className="text-sm text-gray-500">Invoiced end of month → Paid quickly (same month / early next month)</p>
-            </div>
-            <div className="h-px bg-gray-50" />
-            <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-semibold text-gray-900">360 Integrations</p>
-              <p className="text-sm text-gray-500">Invoiced end of month → Paid after 30 days (next month)</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Currency Note */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Currency Tracking</h2>
-          <p className="text-xs text-gray-400 mb-4">Important for exports and tax filing.</p>
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-semibold text-gray-900">Satori Bear Inc</p>
-              <p className="text-sm text-gray-500">Invoiced and paid in <span className="font-medium text-gray-700">CAD</span> — amounts in app match invoice exactly.</p>
-            </div>
-            <div className="h-px bg-gray-50" />
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-semibold text-gray-900">360 Integration LLC</p>
-              <p className="text-sm text-gray-500">Invoiced in <span className="font-medium text-gray-700">USD</span>, received in <span className="font-medium text-gray-700">CAD</span> via wire transfer.</p>
-              <p className="text-sm text-gray-500 mt-1">The <span className="font-medium text-gray-700">CAD amount received</span> (from your bank statement) is what's tracked in this app — not the USD invoice amount. This is correct for CRA tax filing.</p>
-              <div className="mt-2 px-3 py-2 bg-gray-50 rounded-xl text-xs text-gray-500">
-                Example: Invoice for USD 2,400 → received CAD 3,185.04 → <span className="font-medium text-gray-700">$3,185.04 is entered in the app</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Allocation Rates */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Allocation Rates</h2>
-          <p className="text-xs text-gray-400 mb-4">These rates are used to calculate your Tax Reserve and Savings on the dashboard.</p>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Tax Reserve</p>
-                <p className="text-xs text-gray-400">Kept in Simplii Savings</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  value={taxInput}
-                  onChange={(e) => setTaxInput(e.target.value)}
-                  onBlur={handleTaxBlur}
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-500">%</span>
-              </div>
-            </div>
-            <div className="h-px bg-gray-50" />
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Personal Savings</p>
-                <p className="text-xs text-gray-400">Transferred to TD Savings</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  value={savingsInput}
-                  onChange={(e) => setSavingsInput(e.target.value)}
-                  onBlur={handleSavingsBlur}
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-500">%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Allocation Formula */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Allocation Formula (per payment)</h2>
-          <div className="flex flex-col gap-2">
-            {[
-              { label: 'Tax (20%)', desc: 'Keep in Simplii Savings — do NOT touch', color: 'bg-[#FAECEC] text-[#C4554D] border-[#F3D8D8]' },
-              { label: 'Personal Savings (10%)', desc: 'Transfer to TD Savings', color: 'bg-[#EEF3ED] text-[#548164] border-[#DCE9DA]' },
-              { label: 'Business Expenses', desc: 'Reimburse to TD Chequing (if paid from TD)', color: 'bg-[#FAF3DD] text-[#C29343] border-[#F2E6BF]' },
-              { label: 'Personal Expenses', desc: 'Transfer to TD Chequing', color: 'bg-[#F6F3F8] text-[#8A67AB] border-[#E9E1EE]' },
-            ].map(({ label, desc, color }) => (
-              <div key={label} className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${color}`}>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs opacity-75 mt-0.5">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Transfer Process */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Transfer Process</h2>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
-            <div className="flex flex-col items-center gap-1">
-              <div className="px-3 py-2 bg-gray-100 rounded-xl text-gray-700 font-medium text-xs">Simplii Savings</div>
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="px-3 py-2 bg-gray-100 rounded-xl text-gray-700 font-medium text-xs">Simplii Chequing</div>
-            </div>
-            <div className="text-gray-400">→</div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="px-3 py-2 bg-gray-100 rounded-xl text-gray-700 font-medium text-xs">TD Accounts</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Monthly Fixed Expenses */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Monthly Fixed Expenses</h2>
-          <div className="flex flex-col gap-2">
-            {[
-              { label: 'Tuition fee (Uncle)', amount: '$2,000' },
-              { label: 'Rent & Utilities', amount: '$1,000' },
-              { label: 'Family Support (Mom)', amount: '$1,000' },
-              { label: 'Business Expenses', amount: '~$217' },
-              { label: 'Personal & variable expenses', amount: 'varies' },
-            ].map(({ label, amount }) => (
-              <div key={label} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                <p className="text-sm text-gray-700">{label}</p>
-                <p className="text-sm font-semibold text-gray-900">{amount}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Accounts */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Accounts</h2>
-          <div className="flex flex-col gap-2">
-            {[
-              { account: 'Simplii Savings', purpose: 'Tax money only (20% of all income)', tag: 'tax' },
-              { account: 'Simplii Chequing', purpose: 'Receive income, pay business expenses', tag: 'income' },
-              { account: 'TD Savings', purpose: 'Personal savings (10% of all income)', tag: 'savings' },
-              { account: 'TD Chequing', purpose: 'Personal living expenses', tag: 'personal' },
-            ].map(({ account, purpose }) => (
-              <div key={account} className="flex flex-col gap-0.5 py-2 border-b border-gray-50 last:border-0">
-                <p className="text-sm font-semibold text-gray-900">{account}</p>
-                <p className="text-xs text-gray-500">{purpose}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Reminders */}
-        <div className="bg-[#FAF3DD] border border-[#F2E6BF] rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-[#8A6A1F] uppercase tracking-wider mb-3">Important Reminders</h2>
-          <div className="flex flex-col gap-1.5">
-            {[
-              'Set aside tax & savings IMMEDIATELY when payment arrives',
-              'Pay business expenses from Simplii going forward',
-              'Separate each payment\'s budget — don\'t mix',
-              'Track everything in the app',
-            ].map((reminder) => (
-              <p key={reminder} className="text-sm text-[#8A6A1F]">✓ {reminder}</p>
-            ))}
-          </div>
-        </div>
-
-      </div>
+      </Modal>
     </AppLayout>
   )
 }

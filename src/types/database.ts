@@ -158,29 +158,64 @@ export interface Database {
           created_at?: string
         }
       }
+      notes: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          title: string
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
       business_profiles: {
         Row: {
           user_id: string
-          business_name: string
+          business_name: string | null
           address: string | null
           phone: string | null
           email: string | null
+          tax_rate: number
+          savings_rate: number
+          onboarding_completed: boolean
           updated_at: string
         }
         Insert: {
           user_id?: string
-          business_name: string
+          business_name?: string | null
           address?: string | null
           phone?: string | null
           email?: string | null
+          tax_rate?: number
+          savings_rate?: number
+          onboarding_completed?: boolean
           updated_at?: string
         }
         Update: {
           user_id?: string
-          business_name?: string
+          business_name?: string | null
           address?: string | null
           phone?: string | null
           email?: string | null
+          tax_rate?: number
+          savings_rate?: number
+          onboarding_completed?: boolean
           updated_at?: string
         }
       }

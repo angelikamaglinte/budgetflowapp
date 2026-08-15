@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useNavigate } from "react-router-dom"
 import { User, Settings, CreditCard, FileText, LogOut } from "lucide-react"
 import {
   DropdownMenu,
@@ -12,13 +13,15 @@ import { cn } from "@/lib/utils"
 interface MenuLink {
   label: string
   icon: React.ReactNode
+  to?: string
 }
 
-// Not wired to real pages yet — BudgetFlow doesn't have these yet.
-// Present for visual completeness; clicking just closes the menu.
-const PLACEHOLDER_ITEMS: MenuLink[] = [
+// Profile/Subscriptions/Terms & Policies aren't wired to real pages yet —
+// present for visual completeness; clicking just closes the menu. Settings
+// is a real page.
+const MENU_ITEMS: MenuLink[] = [
   { label: "Profile", icon: <User className="h-4 w-4" /> },
-  { label: "Settings", icon: <Settings className="h-4 w-4" /> },
+  { label: "Settings", icon: <Settings className="h-4 w-4" />, to: "/settings" },
   { label: "Subscriptions", icon: <CreditCard className="h-4 w-4" /> },
   { label: "Terms & Policies", icon: <FileText className="h-4 w-4" /> },
 ]
@@ -40,6 +43,7 @@ export default function ProfileDropdown({
   ...props
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const navigate = useNavigate()
   const initial = name?.charAt(0).toUpperCase() ?? "U"
 
   return (
@@ -111,12 +115,13 @@ export default function ProfileDropdown({
           <DropdownMenuSeparator className="my-1 bg-gray-100" />
 
           <div className="space-y-1">
-            {PLACEHOLDER_ITEMS.map((item) => (
+            {MENU_ITEMS.map((item) => (
               <DropdownMenuItem
                 key={item.label}
                 render={
                   <button
                     type="button"
+                    onClick={item.to ? () => navigate(item.to!) : undefined}
                     className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-transparent p-3 transition-all duration-200 hover:border-gray-100 hover:bg-gray-50"
                   />
                 }

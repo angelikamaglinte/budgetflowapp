@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, FileText, Building2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, FileText } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
-import { BusinessProfileForm } from './BusinessProfileForm'
-import type { BusinessProfileFormValues } from './BusinessProfileForm'
 import { InvoiceBuilderForm } from './InvoiceBuilderForm'
 import type { InvoiceBuilderFormValues } from './InvoiceBuilderForm'
 import { PdfInvoiceCard } from './PdfInvoiceCard'
-import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
+import { useBusinessProfile } from '@/hooks/useBusinessProfile'
 import { usePdfInvoices, useAddPdfInvoice, useUpdatePdfInvoice, useDeletePdfInvoice } from '@/hooks/usePdfInvoices'
 import { useAuth } from '@/contexts/AuthContext'
 import { downloadInvoicePdf } from '@/lib/downloadInvoicePdf'
@@ -17,23 +16,16 @@ import type { PdfInvoice } from '@/types'
 export function InvoiceBuilderSection() {
   const { user } = useAuth()
   const { data: businessProfile, isLoading: loadingProfile } = useBusinessProfile()
-  const saveProfile = useSaveBusinessProfile()
   const { data: invoices = [], isLoading: loadingInvoices } = usePdfInvoices()
   const addInvoice = useAddPdfInvoice()
   const updateInvoice = useUpdatePdfInvoice()
   const deleteInvoice = useDeletePdfInvoice()
 
-  const [profileFormOpen, setProfileFormOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<PdfInvoice | null>(null)
   const [duplicateSource, setDuplicateSource] = useState<PdfInvoice | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
-
-  async function handleProfileSubmit(values: BusinessProfileFormValues) {
-    await saveProfile.mutateAsync({ ...values, user_id: user!.id })
-    setProfileFormOpen(false)
-  }
 
   async function handleSubmit(values: InvoiceBuilderFormValues) {
     const payload = {
@@ -95,22 +87,19 @@ export function InvoiceBuilderSection() {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-        <button
-          onClick={() => setProfileFormOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition"
-        >
-          <Building2 className="w-4 h-4" />
-          {businessProfile ? 'Edit Business Info' : 'Set Your Business Info'}
-        </button>
+      <div className="flex items-center justify-end gap-3 mb-5 flex-wrap">
         <PrimaryButton onClick={openNew} className="px-4 py-2.5 rounded-xl text-sm font-medium">
           <Plus className="w-4 h-4" /> New Invoice
         </PrimaryButton>
       </div>
 
-      {!isLoading && !businessProfile && (
+      {!isLoading && !businessProfile?.business_name && (
         <div className="mb-5 bg-[#FAF3DD] border border-[#F3E7C4] text-[#8a6d2f] text-sm px-4 py-3 rounded-xl">
-          Set your business info first so it appears at the top of your invoice PDFs.
+          Set your business info in{' '}
+          <Link to="/settings" className="font-medium underline">
+            Settings
+          </Link>{' '}
+          so it appears at the top of your invoice PDFs.
         </div>
       )}
 
@@ -151,13 +140,6 @@ export function InvoiceBuilderSection() {
           ))}
         </div>
       )}
-
-      <BusinessProfileForm
-        open={profileFormOpen}
-        onClose={() => setProfileFormOpen(false)}
-        onSubmit={handleProfileSubmit}
-        initial={businessProfile}
-      />
 
       <InvoiceBuilderForm
         open={formOpen}

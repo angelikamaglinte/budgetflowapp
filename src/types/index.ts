@@ -23,6 +23,10 @@ export type InvoiceReminder = Database['public']['Tables']['invoice_reminders'][
 export type InvoiceReminderInsert = Database['public']['Tables']['invoice_reminders']['Insert']
 export type InvoiceReminderUpdate = Database['public']['Tables']['invoice_reminders']['Update']
 
+export type Note = Database['public']['Tables']['notes']['Row']
+export type NoteInsert = Database['public']['Tables']['notes']['Insert']
+export type NoteUpdate = Database['public']['Tables']['notes']['Update']
+
 export type BusinessProfile = Database['public']['Tables']['business_profiles']['Row']
 export type BusinessProfileInsert = Database['public']['Tables']['business_profiles']['Insert']
 
