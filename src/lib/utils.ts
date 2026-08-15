@@ -26,3 +26,7 @@ export function getDisplayName(user: { user_metadata?: { full_name?: string }; e
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ') || 'User'
 }
+
+export function getAvatarUrl(user: { user_metadata?: { avatar_url?: string } } | null): string | undefined {
+  return user?.user_metadata?.avatar_url
+}

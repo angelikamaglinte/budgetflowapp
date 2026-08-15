@@ -16,11 +16,11 @@ interface MenuLink {
   to?: string
 }
 
-// Profile/Subscriptions/Terms & Policies aren't wired to real pages yet —
-// present for visual completeness; clicking just closes the menu. Settings
-// is a real page.
+// Subscriptions/Terms & Policies aren't wired to real pages yet — present
+// for visual completeness; clicking just closes the menu. Profile and
+// Settings are real pages.
 const MENU_ITEMS: MenuLink[] = [
-  { label: "Profile", icon: <User className="h-4 w-4" /> },
+  { label: "Profile", icon: <User className="h-4 w-4" />, to: "/profile" },
   { label: "Settings", icon: <Settings className="h-4 w-4" />, to: "/settings" },
   { label: "Subscriptions", icon: <CreditCard className="h-4 w-4" /> },
   { label: "Terms & Policies", icon: <FileText className="h-4 w-4" /> },
@@ -29,6 +29,7 @@ const MENU_ITEMS: MenuLink[] = [
 interface ProfileDropdownProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
   email: string
+  avatarUrl?: string
   onSignOut: () => void
   /** Compact trigger (avatar only, no name/email) — used in the top-right header */
   compact?: boolean
@@ -37,6 +38,7 @@ interface ProfileDropdownProps extends React.HTMLAttributes<HTMLDivElement> {
 export default function ProfileDropdown({
   name,
   email,
+  avatarUrl,
   onSignOut,
   compact = false,
   className,
@@ -45,6 +47,14 @@ export default function ProfileDropdown({
   const [isOpen, setIsOpen] = React.useState(false)
   const navigate = useNavigate()
   const initial = name?.charAt(0).toUpperCase() ?? "U"
+
+  const avatar = avatarUrl ? (
+    <img src={avatarUrl} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
+  ) : (
+    <div className="h-9 w-9 shrink-0 rounded-full bg-primary-50 flex items-center justify-center">
+      <span className="text-sm font-semibold text-primary-600">{initial}</span>
+    </div>
+  )
 
   return (
     <div className={cn("relative", className)} {...props}>
@@ -69,9 +79,7 @@ export default function ProfileDropdown({
                 <div className="text-xs text-gray-400 leading-tight truncate">{email}</div>
               </div>
             )}
-            <div className="h-9 w-9 shrink-0 rounded-full bg-primary-50 flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary-600">{initial}</span>
-            </div>
+            {avatar}
           </DropdownMenuTrigger>
 
           {/* Bending line indicator on the right */}

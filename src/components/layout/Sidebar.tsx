@@ -14,7 +14,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { cn, getDisplayName } from '@/lib/utils'
+import { cn, getDisplayName, getAvatarUrl } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import ProfileDropdown from '@/components/kokonutui/profile-dropdown'
 
@@ -118,6 +118,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <ProfileDropdown
             name={getDisplayName(user)}
             email={user?.email ?? ''}
+            avatarUrl={getAvatarUrl(user)}
             onSignOut={() => void handleSignOut()}
           />
         </div>

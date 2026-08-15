@@ -18,6 +18,7 @@ import Contacts from '@/pages/Contacts'
 import Files from '@/pages/Files'
 import Notes from '@/pages/Notes'
 import Settings from '@/pages/Settings'
+import Profile from '@/pages/Profile'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,6 +133,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />
