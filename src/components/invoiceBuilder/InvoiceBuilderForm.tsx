@@ -11,7 +11,8 @@ import type { PdfInvoice } from '@/types'
 
 const lineItemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
-  date_range: z.string().optional(),
+  date_start: z.string().nullable().optional(),
+  date_end: z.string().nullable().optional(),
   qty: z.coerce.number().positive('Qty must be greater than 0'),
   rate: z.coerce.number().min(0, 'Rate must be 0 or more'),
 })
@@ -39,10 +40,10 @@ interface InvoiceBuilderFormProps {
   isEditing?: boolean
 }
 
-const emptyLineItem = { description: '', date_range: '', qty: 1, rate: 0 }
+const emptyLineItem = { description: '', date_start: null, date_end: null, qty: 1, rate: 0 }
 
 export function InvoiceBuilderForm({ open, onClose, onSubmit, initial, isEditing }: InvoiceBuilderFormProps) {
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<InvoiceBuilderFormValues>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm<InvoiceBuilderFormValues>({
     resolver: zodResolver(invoiceBuilderSchema) as Resolver<InvoiceBuilderFormValues>,
     defaultValues: {
       invoice_number: '',
@@ -78,7 +79,13 @@ export function InvoiceBuilderForm({ open, onClose, onSubmit, initial, isEditing
   const watchedItems = useWatch({ control, name: 'line_items' })
   const watchedTaxRate = useWatch({ control, name: 'tax_rate' })
   const subtotal = computeSubtotal(
-    (watchedItems ?? []).map((i) => ({ ...i, qty: Number(i.qty) || 0, rate: Number(i.rate) || 0, date_range: i.date_range ?? '' }))
+    (watchedItems ?? []).map((i) => ({
+      ...i,
+      qty: Number(i.qty) || 0,
+      rate: Number(i.rate) || 0,
+      date_start: i.date_start ?? null,
+      date_end: i.date_end ?? null,
+    }))
   )
   const tax = computeTax(subtotal, Number(watchedTaxRate) || 0)
   const total = computeTotal(subtotal, tax)
@@ -160,7 +167,7 @@ export function InvoiceBuilderForm({ open, onClose, onSubmit, initial, isEditing
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Line Items</label>
-          <LineItemsEditor control={control} register={register} errors={errors} />
+          <LineItemsEditor control={control} register={register} setValue={setValue} errors={errors} />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

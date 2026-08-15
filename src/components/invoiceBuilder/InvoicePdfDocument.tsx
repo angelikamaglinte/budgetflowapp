@@ -1,7 +1,7 @@
 import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
 import { format } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
-import { lineItemAmount, computeSubtotal, computeTax, computeTotal, formatMoney } from '@/lib/pdfInvoice'
+import { lineItemAmount, computeSubtotal, computeTax, computeTotal, formatMoney, formatDateRange } from '@/lib/pdfInvoice'
 import type { BusinessProfile, PdfInvoice } from '@/types'
 
 const NAVY = '#142127'
@@ -140,7 +140,7 @@ export function InvoicePdfDocument({ businessProfile, invoice }: InvoicePdfDocum
           {invoice.line_items.map((item, i) => (
             <View key={i} style={styles.tableRow}>
               <Text style={styles.cellDescription}>{item.description}</Text>
-              <Text style={styles.cellDateRange}>{item.date_range}</Text>
+              <Text style={styles.cellDateRange}>{formatDateRange(item.date_start, item.date_end)}</Text>
               <Text style={styles.cellQty}>{item.qty}</Text>
               <Text style={styles.cellRate}>{item.rate.toFixed(2)}</Text>
               <Text style={styles.cellAmount}>{lineItemAmount(item).toFixed(2)}</Text>

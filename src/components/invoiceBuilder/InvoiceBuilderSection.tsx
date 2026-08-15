@@ -45,7 +45,8 @@ export function InvoiceBuilderSection() {
       thank_you_note: values.thank_you_note || null,
       line_items: values.line_items.map((item) => ({
         description: item.description,
-        date_range: item.date_range ?? '',
+        date_start: item.date_start || null,
+        date_end: item.date_end || null,
         qty: Number(item.qty),
         rate: Number(item.rate),
       })),

@@ -28,7 +28,8 @@ export type BusinessProfileInsert = Database['public']['Tables']['business_profi
 
 export interface PdfLineItem {
   description: string
-  date_range: string
+  date_start: string | null
+  date_end: string | null
   qty: number
   rate: number
 }
