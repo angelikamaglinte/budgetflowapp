@@ -10,6 +10,8 @@ import {
   NotebookText,
   BarChart3,
   Calculator,
+  CalendarDays,
+  Wrench,
   X,
 } from 'lucide-react'
 import { cn, getDisplayName } from '@/lib/utils'
@@ -22,6 +24,8 @@ const navItems = [
   { to: '/invoices', label: 'Invoices', icon: FileText },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/calculator', label: 'Calculator', icon: Calculator },
+  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/tools', label: 'Tools', icon: Wrench },
   { to: '/contacts', label: 'Contacts', icon: Users },
   { to: '/files', label: 'Files', icon: FolderOpen },
   { to: '/notes', label: 'Notes', icon: NotebookText },

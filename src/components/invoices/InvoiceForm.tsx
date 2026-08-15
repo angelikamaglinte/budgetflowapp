@@ -26,14 +26,15 @@ interface InvoiceFormProps {
   onClose: () => void
   onSubmit: (values: InvoiceFormValues) => Promise<void>
   initial?: Invoice
+  defaultClientName?: string
 }
 
-export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormProps) {
+export function InvoiceForm({ open, onClose, onSubmit, initial, defaultClientName }: InvoiceFormProps) {
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema) as Resolver<InvoiceFormValues>,
     defaultValues: {
       invoice_number: '',
-      client_name: '',
+      client_name: defaultClientName ?? '',
       client_email: '',
       amount: '' as unknown as number,
       status: 'pending',
@@ -50,7 +51,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
     if (open) {
       reset({
         invoice_number: initial?.invoice_number ?? '',
-        client_name: initial?.client_name ?? '',
+        client_name: initial?.client_name ?? defaultClientName ?? '',
         client_email: initial?.client_email ?? '',
         amount: initial?.amount ?? ('' as unknown as number),
         status: (initial?.status as 'pending' | 'paid' | 'overdue') ?? 'pending',
@@ -60,7 +61,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial }: InvoiceFormPro
         notes: initial?.notes ?? '',
       })
     }
-  }, [open, initial, reset])
+  }, [open, initial, defaultClientName, reset])
 
   return (
     <Modal open={open} onClose={onClose}>

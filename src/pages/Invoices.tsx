@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
 import { Plus, Search, Pencil, Trash2, CheckCircle, Download } from 'lucide-react'
@@ -23,11 +24,24 @@ export default function Invoices() {
   const deleteInvoice = useDeleteInvoice()
 
   const { periodFilter } = usePeriod()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Invoice | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [prefillClientName, setPrefillClientName] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const state = location.state as { prefillClientName?: string } | null
+    if (state?.prefillClientName) {
+      setEditTarget(null)
+      setPrefillClientName(state.prefillClientName)
+      setFormOpen(true)
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
@@ -309,9 +323,10 @@ export default function Invoices() {
 
       <InvoiceForm
         open={formOpen}
-        onClose={() => { setFormOpen(false); setEditTarget(null) }}
+        onClose={() => { setFormOpen(false); setEditTarget(null); setPrefillClientName(undefined) }}
         onSubmit={handleSubmit}
         initial={editTarget ?? undefined}
+        defaultClientName={prefillClientName}
       />
 
       <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">

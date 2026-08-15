@@ -11,6 +11,8 @@ import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
 import Reports from '@/pages/Reports'
 import Calculator from '@/pages/Calculator'
+import Calendar from '@/pages/Calendar'
+import Tools from '@/pages/Tools'
 import Contacts from '@/pages/Contacts'
 import Files from '@/pages/Files'
 import Notes from '@/pages/Notes'
@@ -71,6 +73,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Calculator />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools"
+              element={
+                <ProtectedRoute>
+                  <Tools />
                 </ProtectedRoute>
               }
             />

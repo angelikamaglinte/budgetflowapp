@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DollarSign, TrendingUp, TrendingDown, Clock, PiggyBank, ShieldCheck } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -6,16 +7,24 @@ import { SpendingChart } from '@/components/dashboard/SpendingChart'
 import { CategoryChart } from '@/components/dashboard/CategoryChart'
 import { IncomeExpenseChart } from '@/components/dashboard/IncomeExpenseChart'
 import { RecentInvoices } from '@/components/dashboard/RecentInvoices'
+import { InvoiceReminderBanners } from '@/components/dashboard/InvoiceReminderBanners'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
+import { useInvoiceReminders, useDismissInvoiceReminder } from '@/hooks/useInvoiceReminders'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 import { useAllocation } from '@/contexts/AllocationContext'
+import { getDueReminders } from '@/lib/reminders'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
+  const { data: reminders = [] } = useInvoiceReminders()
+  const dismissReminder = useDismissInvoiceReminder()
   const { periodFilter } = usePeriod()
   const { taxRate, savingsRate } = useAllocation()
+
+  const dueReminders = useMemo(() => getDueReminders(reminders), [reminders])
 
   const stats = useMemo(() => {
     const filteredExp = expenses.filter((e) => matchesPeriod(e.date, periodFilter))
@@ -55,6 +64,12 @@ export default function Dashboard() {
 
   return (
     <AppLayout title="Dashboard" subtitle={subtitle}>
+      <InvoiceReminderBanners
+        dueReminders={dueReminders}
+        onCreateInvoice={(clientName) => navigate('/invoices', { state: { prefillClientName: clientName } })}
+        onDismiss={(id) => void dismissReminder.mutateAsync(id)}
+      />
+
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
         <StatCard

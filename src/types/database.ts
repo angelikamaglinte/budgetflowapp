@@ -158,6 +158,35 @@ export interface Database {
           created_at?: string
         }
       }
+      invoice_reminders: {
+        Row: {
+          id: string
+          user_id: string
+          client_name: string
+          reminder_day: number
+          notes: string | null
+          dismissed_period: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          client_name: string
+          reminder_day: number
+          notes?: string | null
+          dismissed_period?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          client_name?: string
+          reminder_day?: number
+          notes?: string | null
+          dismissed_period?: string | null
+          created_at?: string
+        }
+      }
       purchase_plans: {
         Row: {
           id: string

@@ -19,6 +19,10 @@ export type PurchasePlan = Database['public']['Tables']['purchase_plans']['Row']
 export type PurchasePlanInsert = Database['public']['Tables']['purchase_plans']['Insert']
 export type PurchasePlanUpdate = Database['public']['Tables']['purchase_plans']['Update']
 
+export type InvoiceReminder = Database['public']['Tables']['invoice_reminders']['Row']
+export type InvoiceReminderInsert = Database['public']['Tables']['invoice_reminders']['Insert']
+export type InvoiceReminderUpdate = Database['public']['Tables']['invoice_reminders']['Update']
+
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
 export type FileCategory = 'contract' | 'invoice' | 'receipt' | 'other'
