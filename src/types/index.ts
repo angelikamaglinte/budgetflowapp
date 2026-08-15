@@ -23,6 +23,25 @@ export type InvoiceReminder = Database['public']['Tables']['invoice_reminders'][
 export type InvoiceReminderInsert = Database['public']['Tables']['invoice_reminders']['Insert']
 export type InvoiceReminderUpdate = Database['public']['Tables']['invoice_reminders']['Update']
 
+export type BusinessProfile = Database['public']['Tables']['business_profiles']['Row']
+export type BusinessProfileInsert = Database['public']['Tables']['business_profiles']['Insert']
+
+export interface PdfLineItem {
+  description: string
+  date_range: string
+  qty: number
+  rate: number
+}
+
+export type PdfInvoiceRow = Database['public']['Tables']['pdf_invoices']['Row']
+export type PdfInvoice = Omit<PdfInvoiceRow, 'line_items'> & { line_items: PdfLineItem[] }
+export type PdfInvoiceInsert = Omit<Database['public']['Tables']['pdf_invoices']['Insert'], 'line_items'> & {
+  line_items: PdfLineItem[]
+}
+export type PdfInvoiceUpdate = Omit<Database['public']['Tables']['pdf_invoices']['Update'], 'line_items'> & {
+  line_items?: PdfLineItem[]
+}
+
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
 export type FileCategory = 'contract' | 'invoice' | 'receipt' | 'other'

@@ -158,6 +158,82 @@ export interface Database {
           created_at?: string
         }
       }
+      business_profiles: {
+        Row: {
+          user_id: string
+          business_name: string
+          address: string | null
+          phone: string | null
+          email: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id?: string
+          business_name: string
+          address?: string | null
+          phone?: string | null
+          email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          business_name?: string
+          address?: string | null
+          phone?: string | null
+          email?: string | null
+          updated_at?: string
+        }
+      }
+      pdf_invoices: {
+        Row: {
+          id: string
+          user_id: string
+          invoice_number: string
+          invoice_date: string
+          due_date: string | null
+          terms: string | null
+          client_name: string
+          client_company: string | null
+          client_address: string | null
+          tax_rate: number
+          thank_you_note: string | null
+          line_items: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          invoice_number: string
+          invoice_date: string
+          due_date?: string | null
+          terms?: string | null
+          client_name: string
+          client_company?: string | null
+          client_address?: string | null
+          tax_rate?: number
+          thank_you_note?: string | null
+          line_items?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          invoice_number?: string
+          invoice_date?: string
+          due_date?: string | null
+          terms?: string | null
+          client_name?: string
+          client_company?: string | null
+          client_address?: string | null
+          tax_rate?: number
+          thank_you_note?: string | null
+          line_items?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
       invoice_reminders: {
         Row: {
           id: string

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SchedulerSection } from '@/components/scheduler/SchedulerSection'
+import { InvoiceBuilderSection } from '@/components/invoiceBuilder/InvoiceBuilderSection'
 import { cn } from '@/lib/utils'
 
-type ToolTab = 'scheduler'
+type ToolTab = 'scheduler' | 'invoice-builder'
 
 const TOOL_TABS: { id: ToolTab; label: string }[] = [
   { id: 'scheduler', label: 'Scheduler' },
+  { id: 'invoice-builder', label: 'Invoice Builder' },
 ]
 
 export default function Tools() {
@@ -32,6 +34,7 @@ export default function Tools() {
       </div>
 
       {activeTab === 'scheduler' && <SchedulerSection />}
+      {activeTab === 'invoice-builder' && <InvoiceBuilderSection />}
     </AppLayout>
   )
 }
