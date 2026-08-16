@@ -9,19 +9,25 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { StatusBadge } from '@/components/invoices/StatusBadge'
 import { InvoiceForm } from '@/components/invoices/InvoiceForm'
 import type { InvoiceFormValues } from '@/components/invoices/InvoiceForm'
+import { TransferChecklistModal } from '@/components/invoices/TransferChecklistModal'
 import { useInvoices, useAddInvoice, useUpdateInvoice, useDeleteInvoice } from '@/hooks/useInvoices'
+import { useAddNotification } from '@/hooks/useNotifications'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAllocation } from '@/contexts/AllocationContext'
 import { exportInvoices } from '@/lib/export'
+import { getEffectiveStatus } from '@/lib/invoiceStatus'
 import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 import { parseLocalDate } from '@/lib/utils'
 
 export default function Invoices() {
   const { user } = useAuth()
+  const { taxRate, savingsRate } = useAllocation()
   const { data: invoices = [], isLoading } = useInvoices()
   const addInvoice = useAddInvoice()
   const updateInvoice = useUpdateInvoice()
   const deleteInvoice = useDeleteInvoice()
+  const addNotification = useAddNotification()
 
   const { periodFilter } = usePeriod()
   const location = useLocation()
@@ -32,6 +38,7 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [prefillClientName, setPrefillClientName] = useState<string | undefined>(undefined)
+  const [transferChecklistInvoice, setTransferChecklistInvoice] = useState<Invoice | null>(null)
 
   useEffect(() => {
     const state = location.state as { prefillClientName?: string } | null
@@ -49,7 +56,7 @@ export default function Invoices() {
       const matchSearch =
         inv.client_name.toLowerCase().includes(search.toLowerCase()) ||
         inv.invoice_number.toLowerCase().includes(search.toLowerCase())
-      const matchStatus = statusFilter ? inv.status === statusFilter : true
+      const matchStatus = statusFilter ? getEffectiveStatus(inv) === statusFilter : true
       return matchPeriod && matchSearch && matchStatus
     })
   }, [invoices, periodFilter, search, statusFilter])
@@ -76,6 +83,14 @@ export default function Invoices() {
       id: inv.id,
       status: 'paid',
       date_paid: new Date().toISOString().split('T')[0],
+    })
+    setTransferChecklistInvoice(inv)
+    const taxAmount = inv.amount * (taxRate / 100)
+    const savingsAmount = inv.amount * (savingsRate / 100)
+    void addNotification.mutateAsync({
+      user_id: user!.id,
+      message: `Invoice ${inv.invoice_number} marked paid — move $${taxAmount.toFixed(2)} to tax, $${savingsAmount.toFixed(2)} to savings.`,
+      link: '/invoices',
     })
   }
 
@@ -202,7 +217,7 @@ export default function Invoices() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <StatusBadge status={inv.status} />
+                    <StatusBadge status={getEffectiveStatus(inv)} />
                     <div className="flex items-center gap-1 shrink-0">
                       {inv.status === 'pending' && (
                         <button
@@ -280,7 +295,7 @@ export default function Invoices() {
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusBadge status={inv.status} />
+                        <StatusBadge status={getEffectiveStatus(inv)} />
                       </td>
                       <td className="px-4 py-4 text-right">
                         <span className="text-sm font-semibold text-gray-900">
@@ -349,6 +364,17 @@ export default function Invoices() {
           </div>
         </div>
       </Modal>
+
+      {transferChecklistInvoice && (
+        <TransferChecklistModal
+          open={!!transferChecklistInvoice}
+          onClose={() => setTransferChecklistInvoice(null)}
+          invoiceNumber={transferChecklistInvoice.invoice_number}
+          amount={transferChecklistInvoice.amount}
+          taxRate={taxRate}
+          savingsRate={savingsRate}
+        />
+      )}
     </AppLayout>
   )
 }

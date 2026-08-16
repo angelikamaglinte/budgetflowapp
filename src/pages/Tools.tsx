@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SchedulerSection } from '@/components/scheduler/SchedulerSection'
 import { InvoiceBuilderSection } from '@/components/invoiceBuilder/InvoiceBuilderSection'
+import { RecurringExpensesSection } from '@/components/automations/RecurringExpensesSection'
+import { RecurringInvoicesSection } from '@/components/automations/RecurringInvoicesSection'
 import { cn } from '@/lib/utils'
 
-type ToolTab = 'scheduler' | 'invoice-builder'
+type ToolTab = 'scheduler' | 'invoice-builder' | 'recurring-expenses' | 'recurring-invoices'
 
 const TOOL_TABS: { id: ToolTab; label: string }[] = [
   { id: 'scheduler', label: 'Scheduler' },
   { id: 'invoice-builder', label: 'Invoice Builder' },
+  { id: 'recurring-expenses', label: 'Recurring Expenses' },
+  { id: 'recurring-invoices', label: 'Recurring Invoices' },
 ]
 
 export default function Tools() {
@@ -16,7 +20,7 @@ export default function Tools() {
 
   return (
     <AppLayout title="Tools" subtitle="Utilities to help you run the business" showPeriodSelector={false}>
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TOOL_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -35,6 +39,8 @@ export default function Tools() {
 
       {activeTab === 'scheduler' && <SchedulerSection />}
       {activeTab === 'invoice-builder' && <InvoiceBuilderSection />}
+      {activeTab === 'recurring-expenses' && <RecurringExpensesSection />}
+      {activeTab === 'recurring-invoices' && <RecurringInvoicesSection />}
     </AppLayout>
   )
 }

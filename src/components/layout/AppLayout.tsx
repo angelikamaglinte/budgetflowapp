@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { format, subMonths } from 'date-fns'
 import { CalendarDays, Menu, TrendingUp } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { usePeriod } from '@/contexts/PeriodContext'
 
 interface AppLayoutProps {
@@ -56,6 +57,8 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
+            <NotificationBell />
+
             {/* Global period selector */}
             {showPeriodSelector && (
               <div className="flex items-center gap-2 shrink-0">
