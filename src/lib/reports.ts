@@ -1,6 +1,6 @@
-import { differenceInCalendarDays, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { differenceInCalendarDays, subMonths, addMonths, startOfMonth, endOfMonth, format } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
-import type { Invoice, Expense } from '@/types'
+import type { Invoice, Expense, RecurringInvoice } from '@/types'
 
 export const DUE_SOON_DAYS = 7
 export const FORECAST_LOOKBACK_MONTHS = 3
@@ -256,4 +256,175 @@ export function computeQuarterlyTaxSummary(
   }
 
   return quarters
+}
+
+// ─── 5. Profit & Loss (custom date range) ───────────────────────────────────
+
+export interface ProfitLossCategoryLine {
+  category: string
+  amount: number
+}
+
+export interface ProfitLossResult {
+  income: number
+  totalExpenses: number
+  netProfit: number
+  expensesByCategory: ProfitLossCategoryLine[]
+}
+
+export function computeProfitAndLoss(
+  invoices: Invoice[],
+  expenses: Expense[],
+  startDate: Date,
+  endDate: Date
+): ProfitLossResult {
+  const income = invoices
+    .filter((inv) => inv.status === 'paid' && inv.date_paid)
+    .filter((inv) => {
+      const d = parseLocalDate(inv.date_paid!)
+      return d >= startDate && d <= endDate
+    })
+    .reduce((sum, inv) => sum + inv.amount, 0)
+
+  const periodExpenses = expenses.filter((e) => {
+    const d = parseLocalDate(e.date)
+    return d >= startDate && d <= endDate
+  })
+
+  const categoryTotals = new Map<string, number>()
+  for (const e of periodExpenses) {
+    categoryTotals.set(e.category, (categoryTotals.get(e.category) ?? 0) + e.amount)
+  }
+  const expensesByCategory = Array.from(categoryTotals.entries())
+    .map(([category, amount]) => ({ category, amount }))
+    .sort((a, b) => b.amount - a.amount)
+
+  const totalExpenses = periodExpenses.reduce((sum, e) => sum + e.amount, 0)
+
+  return { income, totalExpenses, netProfit: income - totalExpenses, expensesByCategory }
+}
+
+// ─── 6. Category spending trend ─────────────────────────────────────────────
+
+export const CATEGORY_TREND_MONTHS = 12
+
+export interface CategoryTrendPoint {
+  monthKey: string
+  label: string
+  amount: number
+}
+
+export function computeCategoryTrend(
+  expenses: Expense[],
+  category: string,
+  months: number = CATEGORY_TREND_MONTHS,
+  today: Date = new Date()
+): CategoryTrendPoint[] {
+  const points: CategoryTrendPoint[] = []
+  for (let i = months - 1; i >= 0; i--) {
+    const monthDate = subMonths(today, i)
+    const start = startOfMonth(monthDate)
+    const end = endOfMonth(monthDate)
+    const amount = expenses
+      .filter((e) => e.category === category)
+      .filter((e) => {
+        const d = parseLocalDate(e.date)
+        return d >= start && d <= end
+      })
+      .reduce((sum, e) => sum + e.amount, 0)
+    points.push({ monthKey: format(monthDate, 'yyyy-MM'), label: format(monthDate, 'MMM yyyy'), amount })
+  }
+  return points
+}
+
+// ─── 7. Unbilled / upcoming revenue ─────────────────────────────────────────
+
+export const UPCOMING_REVENUE_MONTHS = 3
+
+export interface UpcomingRevenueMonth {
+  monthKey: string
+  label: string
+  pendingInvoices: number
+  recurringProjected: number
+}
+
+// Pending invoices bucketed by due date (falls back to issue date if unset),
+// plus a projection of what active recurring invoice templates would add if
+// they fire on schedule. The current month excludes templates that have
+// already fired this period, since that revenue is no longer "upcoming."
+export function computeUpcomingRevenue(
+  invoices: Invoice[],
+  recurringInvoices: RecurringInvoice[],
+  monthsAhead: number = UPCOMING_REVENUE_MONTHS,
+  today: Date = new Date()
+): UpcomingRevenueMonth[] {
+  const months: UpcomingRevenueMonth[] = []
+  for (let i = 0; i < monthsAhead; i++) {
+    const monthDate = addMonths(today, i)
+    const start = startOfMonth(monthDate)
+    const end = endOfMonth(monthDate)
+    const monthKey = format(monthDate, 'yyyy-MM')
+
+    const pendingInvoices = invoices
+      .filter((inv) => inv.status !== 'paid')
+      .filter((inv) => {
+        const refDate = inv.due_date ? parseLocalDate(inv.due_date) : parseLocalDate(inv.issue_date)
+        return refDate >= start && refDate <= end
+      })
+      .reduce((sum, inv) => sum + inv.amount, 0)
+
+    const recurringProjected = recurringInvoices
+      .filter((r) => r.active)
+      .filter((r) => i > 0 || r.last_run_period !== monthKey)
+      .reduce((sum, r) => {
+        const subtotal = r.line_items.reduce((s, li) => s + li.qty * li.rate, 0)
+        return sum + subtotal * (1 + r.tax_rate / 100)
+      }, 0)
+
+    months.push({ monthKey, label: format(monthDate, 'MMM yyyy'), pendingInvoices, recurringProjected })
+  }
+  return months
+}
+
+// ─── 8. Year-over-year comparison ───────────────────────────────────────────
+
+export interface YearComparisonMonth {
+  monthIndex: number
+  monthLabel: string
+  currentYearIncome: number
+  previousYearIncome: number
+  currentYearExpenses: number
+  previousYearExpenses: number
+}
+
+export function computeYearOverYear(invoices: Invoice[], expenses: Expense[], year: number): YearComparisonMonth[] {
+  const incomeForYearMonth = (yr: number, m: number) =>
+    invoices
+      .filter((inv) => inv.status === 'paid' && inv.date_paid)
+      .filter((inv) => {
+        const d = parseLocalDate(inv.date_paid!)
+        return d.getFullYear() === yr && d.getMonth() === m
+      })
+      .reduce((s, inv) => s + inv.amount, 0)
+
+  const expensesForYearMonth = (yr: number, m: number) =>
+    expenses
+      .filter((e) => {
+        const d = parseLocalDate(e.date)
+        return d.getFullYear() === yr && d.getMonth() === m
+      })
+      .reduce((s, e) => s + e.amount, 0)
+
+  const months: YearComparisonMonth[] = []
+  for (let m = 0; m < 12; m++) {
+    months.push({
+      monthIndex: m,
+      monthLabel: format(new Date(year, m, 1), 'MMM'),
+      currentYearIncome: incomeForYearMonth(year, m),
+      previousYearIncome: incomeForYearMonth(year - 1, m),
+      currentYearExpenses: expensesForYearMonth(year, m),
+      previousYearExpenses: expensesForYearMonth(year - 1, m),
+    })
+  }
+  return months
 }

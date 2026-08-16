@@ -4,13 +4,19 @@ import { InvoiceAgingSection } from '@/components/reports/InvoiceAgingSection'
 import { ClientIncomeSection } from '@/components/reports/ClientIncomeSection'
 import { CashFlowSection } from '@/components/reports/CashFlowSection'
 import { QuarterlyTaxSection } from '@/components/reports/QuarterlyTaxSection'
+import { ProfitLossSection } from '@/components/reports/ProfitLossSection'
+import { CategorySpendingTrendSection } from '@/components/reports/CategorySpendingTrendSection'
+import { UpcomingRevenueSection } from '@/components/reports/UpcomingRevenueSection'
+import { YearOverYearSection } from '@/components/reports/YearOverYearSection'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
+import { useRecurringInvoices } from '@/hooks/useRecurringInvoices'
 import { useAllocation } from '@/contexts/AllocationContext'
 
 export default function Reports() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
+  const { data: recurringInvoices = [] } = useRecurringInvoices()
   const { taxRate } = useAllocation()
   const isLoading = loadingExp || loadingInv
 
@@ -46,6 +52,10 @@ export default function Reports() {
         <ClientIncomeSection invoices={invoices} />
         <CashFlowSection invoices={invoices} expenses={expenses} />
         <QuarterlyTaxSection invoices={invoices} expenses={expenses} taxRate={taxRate} />
+        <ProfitLossSection invoices={invoices} expenses={expenses} />
+        <CategorySpendingTrendSection expenses={expenses} />
+        <UpcomingRevenueSection invoices={invoices} recurringInvoices={recurringInvoices} />
+        <YearOverYearSection invoices={invoices} expenses={expenses} />
       </div>
     </AppLayout>
   )

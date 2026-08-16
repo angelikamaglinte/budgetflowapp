@@ -158,6 +158,132 @@ export interface Database {
           created_at?: string
         }
       }
+      recurring_expenses: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          vendor: string | null
+          category: string
+          type: string
+          amount: number
+          day_of_month: number
+          notes: string | null
+          active: boolean
+          last_run_period: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          title: string
+          vendor?: string | null
+          category: string
+          type?: string
+          amount: number
+          day_of_month: number
+          notes?: string | null
+          active?: boolean
+          last_run_period?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          vendor?: string | null
+          category?: string
+          type?: string
+          amount?: number
+          day_of_month?: number
+          notes?: string | null
+          active?: boolean
+          last_run_period?: string | null
+          created_at?: string
+        }
+      }
+      recurring_invoices: {
+        Row: {
+          id: string
+          user_id: string
+          client_name: string
+          client_company: string | null
+          client_address: string | null
+          terms: string | null
+          tax_rate: number
+          thank_you_note: string | null
+          line_items: Json
+          invoice_number_prefix: string
+          next_sequence: number
+          due_in_days: number | null
+          day_of_month: number
+          active: boolean
+          last_run_period: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          client_name: string
+          client_company?: string | null
+          client_address?: string | null
+          terms?: string | null
+          tax_rate?: number
+          thank_you_note?: string | null
+          line_items?: Json
+          invoice_number_prefix?: string
+          next_sequence?: number
+          due_in_days?: number | null
+          day_of_month: number
+          active?: boolean
+          last_run_period?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          client_name?: string
+          client_company?: string | null
+          client_address?: string | null
+          terms?: string | null
+          tax_rate?: number
+          thank_you_note?: string | null
+          line_items?: Json
+          invoice_number_prefix?: string
+          next_sequence?: number
+          due_in_days?: number | null
+          day_of_month?: number
+          active?: boolean
+          last_run_period?: string | null
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          message: string
+          link: string | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          message: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          message?: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
+        }
+      }
       notes: {
         Row: {
           id: string

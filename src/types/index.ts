@@ -47,6 +47,28 @@ export type PdfInvoiceUpdate = Omit<Database['public']['Tables']['pdf_invoices']
   line_items?: PdfLineItem[]
 }
 
+export type RecurringExpense = Database['public']['Tables']['recurring_expenses']['Row']
+export type RecurringExpenseInsert = Database['public']['Tables']['recurring_expenses']['Insert']
+export type RecurringExpenseUpdate = Database['public']['Tables']['recurring_expenses']['Update']
+
+export interface RecurringLineItem {
+  description: string
+  qty: number
+  rate: number
+}
+
+export type RecurringInvoiceRow = Database['public']['Tables']['recurring_invoices']['Row']
+export type RecurringInvoice = Omit<RecurringInvoiceRow, 'line_items'> & { line_items: RecurringLineItem[] }
+export type RecurringInvoiceInsert = Omit<Database['public']['Tables']['recurring_invoices']['Insert'], 'line_items'> & {
+  line_items: RecurringLineItem[]
+}
+export type RecurringInvoiceUpdate = Omit<Database['public']['Tables']['recurring_invoices']['Update'], 'line_items'> & {
+  line_items?: RecurringLineItem[]
+}
+
+export type Notification = Database['public']['Tables']['notifications']['Row']
+export type NotificationInsert = Database['public']['Tables']['notifications']['Insert']
+
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue'
 export type ExpenseType = 'business' | 'personal'
 export type FileCategory = 'contract' | 'invoice' | 'receipt' | 'other'
