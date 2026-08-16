@@ -209,3 +209,51 @@ export function computeCashFlowForecast(
     projectedNet30,
   }
 }
+
+// ─── 4. Quarterly estimated tax ─────────────────────────────────────────────
+
+export interface QuarterSummary {
+  quarter: number
+  label: string
+  income: number
+  taxReserve: number
+  businessExpenses: number
+}
+
+// Income = paid invoices by date_paid; deductible expenses = business-type
+// only (personal expenses aren't deductible). Tax reserve mirrors the same
+// income × rate model used on the Dashboard and Settings — not tax advice.
+export function computeQuarterlyTaxSummary(
+  invoices: Invoice[],
+  expenses: Expense[],
+  taxRate: number,
+  year: number
+): QuarterSummary[] {
+  const quarters: QuarterSummary[] = [1, 2, 3, 4].map((q) => ({
+    quarter: q,
+    label: `Q${q}`,
+    income: 0,
+    taxReserve: 0,
+    businessExpenses: 0,
+  }))
+
+  for (const inv of invoices) {
+    if (inv.status !== 'paid' || !inv.date_paid) continue
+    const d = parseLocalDate(inv.date_paid)
+    if (d.getFullYear() !== year) continue
+    quarters[Math.floor(d.getMonth() / 3)].income += inv.amount
+  }
+
+  for (const exp of expenses) {
+    if (exp.type !== 'business') continue
+    const d = parseLocalDate(exp.date)
+    if (d.getFullYear() !== year) continue
+    quarters[Math.floor(d.getMonth() / 3)].businessExpenses += exp.amount
+  }
+
+  for (const q of quarters) {
+    q.taxReserve = q.income * (taxRate / 100)
+  }
+
+  return quarters
+}

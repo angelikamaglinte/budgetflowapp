@@ -3,12 +3,15 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { InvoiceAgingSection } from '@/components/reports/InvoiceAgingSection'
 import { ClientIncomeSection } from '@/components/reports/ClientIncomeSection'
 import { CashFlowSection } from '@/components/reports/CashFlowSection'
+import { QuarterlyTaxSection } from '@/components/reports/QuarterlyTaxSection'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
+import { useAllocation } from '@/contexts/AllocationContext'
 
 export default function Reports() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
+  const { taxRate } = useAllocation()
   const isLoading = loadingExp || loadingInv
 
   if (isLoading) {
@@ -42,6 +45,7 @@ export default function Reports() {
         <InvoiceAgingSection invoices={invoices} />
         <ClientIncomeSection invoices={invoices} />
         <CashFlowSection invoices={invoices} expenses={expenses} />
+        <QuarterlyTaxSection invoices={invoices} expenses={expenses} taxRate={taxRate} />
       </div>
     </AppLayout>
   )
