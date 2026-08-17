@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { PeriodProvider } from '@/contexts/PeriodContext'
 import { AllocationProvider } from '@/contexts/AllocationContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import Landing from '@/pages/Landing'
 import Login from '@/pages/auth/Login'
 import Signup from '@/pages/auth/Signup'
 import Onboarding from '@/pages/auth/Onboarding'
@@ -145,7 +146,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Landing />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
