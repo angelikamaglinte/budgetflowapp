@@ -1,18 +1,19 @@
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
-import { Plus, Search, Pencil, Trash2, Download, LayoutList, Briefcase, User } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Download, Upload, LayoutList, Briefcase, User } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
 import { ExpenseForm } from '@/components/expenses/ExpenseForm'
 import type { ExpenseFormValues } from '@/components/expenses/ExpenseForm'
-import { useExpenses, useAddExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/useExpenses'
+import { ImportExpensesModal } from '@/components/expenses/ImportExpensesModal'
+import { useExpenses, useAddExpense, useUpdateExpense, useDeleteExpense, useBulkAddExpenses } from '@/hooks/useExpenses'
 import { useAuth } from '@/contexts/AuthContext'
 import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
-import type { Expense } from '@/types'
+import type { Expense, ExpenseInsert } from '@/types'
 import { cn, parseLocalDate } from '@/lib/utils'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
@@ -30,10 +31,12 @@ export default function Expenses() {
   const addExpense = useAddExpense()
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
+  const bulkAddExpenses = useBulkAddExpenses()
 
   const { periodFilter } = usePeriod()
   const [activeTab, setActiveTab] = useState<TabType>('all')
   const [formOpen, setFormOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -89,6 +92,10 @@ export default function Expenses() {
     setDeleteId(null)
   }
 
+  async function handleImport(imported: ExpenseInsert[]) {
+    await bulkAddExpenses.mutateAsync(imported.map((e) => ({ ...e, user_id: user!.id })))
+  }
+
   function handleExport() {
     const label = activeTab === 'all' ? 'All' : activeTab === 'business' ? 'Business' : 'Personal'
     exportExpenses(filtered, label)
@@ -100,6 +107,12 @@ export default function Expenses() {
       subtitle="Track and manage your expenses"
       action={
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
+          >
+            <Upload className="w-4 h-4" /> Import CSV
+          </button>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium transition"
@@ -348,6 +361,14 @@ export default function Expenses() {
         onClose={() => { setFormOpen(false); setEditTarget(null) }}
         onSubmit={handleSubmit}
         initial={editTarget ?? undefined}
+      />
+
+      {/* Import from CSV */}
+      <ImportExpensesModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        existingExpenses={expenses}
+        onImport={handleImport}
       />
 
       {/* Delete confirmation */}

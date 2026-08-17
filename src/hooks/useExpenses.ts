@@ -33,6 +33,20 @@ export function useAddExpense() {
   })
 }
 
+export function useBulkAddExpenses() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (expenses: ExpenseInsert[]) => {
+      const { data, error } = await supabase.from('expenses').insert(expenses).select()
+      if (error) throw error
+      return (data ?? []) as Expense[]
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['expenses'] })
+    },
+  })
+}
+
 export function useUpdateExpense() {
   const queryClient = useQueryClient()
   return useMutation({
