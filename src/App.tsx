@@ -95,8 +95,9 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/tools" element={<Navigate to="/tools/scheduler" replace />} />
             <Route
-              path="/tools"
+              path="/tools/:tab"
               element={
                 <ProtectedRoute>
                   <Tools />

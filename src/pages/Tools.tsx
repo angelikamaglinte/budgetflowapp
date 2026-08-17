@@ -1,46 +1,30 @@
-import { useState } from 'react'
+import { useParams, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SchedulerSection } from '@/components/scheduler/SchedulerSection'
 import { InvoiceBuilderSection } from '@/components/invoiceBuilder/InvoiceBuilderSection'
 import { RecurringExpensesSection } from '@/components/automations/RecurringExpensesSection'
 import { RecurringInvoicesSection } from '@/components/automations/RecurringInvoicesSection'
-import { cn } from '@/lib/utils'
 
-type ToolTab = 'scheduler' | 'invoice-builder' | 'recurring-expenses' | 'recurring-invoices'
-
-const TOOL_TABS: { id: ToolTab; label: string }[] = [
-  { id: 'scheduler', label: 'Scheduler' },
-  { id: 'invoice-builder', label: 'Invoice Builder' },
-  { id: 'recurring-expenses', label: 'Recurring Expenses' },
-  { id: 'recurring-invoices', label: 'Recurring Invoices' },
-]
+const TAB_LABELS: Record<string, string> = {
+  scheduler: 'Scheduler',
+  'invoice-builder': 'Invoice Builder',
+  'recurring-expenses': 'Recurring Expenses',
+  'recurring-invoices': 'Recurring Invoices',
+}
 
 export default function Tools() {
-  const [activeTab, setActiveTab] = useState<ToolTab>('scheduler')
+  const { tab } = useParams<{ tab: string }>()
+
+  if (!tab || !(tab in TAB_LABELS)) {
+    return <Navigate to="/tools/scheduler" replace />
+  }
 
   return (
-    <AppLayout title="Tools" subtitle="Utilities to help you run the business" showPeriodSelector={false}>
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {TOOL_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'px-3.5 py-2 rounded-xl text-sm font-medium transition-all border',
-              activeTab === tab.id
-                ? 'bg-primary-600 text-white border-primary-600'
-                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-900'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'scheduler' && <SchedulerSection />}
-      {activeTab === 'invoice-builder' && <InvoiceBuilderSection />}
-      {activeTab === 'recurring-expenses' && <RecurringExpensesSection />}
-      {activeTab === 'recurring-invoices' && <RecurringInvoicesSection />}
+    <AppLayout title={TAB_LABELS[tab]} subtitle="Utilities to help you run the business" showPeriodSelector={false}>
+      {tab === 'scheduler' && <SchedulerSection />}
+      {tab === 'invoice-builder' && <InvoiceBuilderSection />}
+      {tab === 'recurring-expenses' && <RecurringExpensesSection />}
+      {tab === 'recurring-invoices' && <RecurringInvoicesSection />}
     </AppLayout>
   )
 }

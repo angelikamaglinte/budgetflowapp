@@ -9,8 +9,10 @@ import type { InvoiceBuilderFormValues } from './InvoiceBuilderForm'
 import { PdfInvoiceCard } from './PdfInvoiceCard'
 import { useBusinessProfile } from '@/hooks/useBusinessProfile'
 import { usePdfInvoices, useAddPdfInvoice, useUpdatePdfInvoice, useDeletePdfInvoice } from '@/hooks/usePdfInvoices'
+import { useAddInvoice } from '@/hooks/useInvoices'
 import { useAuth } from '@/contexts/AuthContext'
 import { downloadInvoicePdf } from '@/lib/downloadInvoicePdf'
+import { computeSubtotal, computeTax, computeTotal } from '@/lib/pdfInvoice'
 import type { PdfInvoice } from '@/types'
 
 export function InvoiceBuilderSection() {
@@ -20,6 +22,7 @@ export function InvoiceBuilderSection() {
   const addInvoice = useAddPdfInvoice()
   const updateInvoice = useUpdatePdfInvoice()
   const deleteInvoice = useDeletePdfInvoice()
+  const addTrackerInvoice = useAddInvoice()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<PdfInvoice | null>(null)
@@ -46,7 +49,23 @@ export function InvoiceBuilderSection() {
     if (editTarget) {
       await updateInvoice.mutateAsync({ id: editTarget.id, ...payload })
     } else {
-      await addInvoice.mutateAsync({ ...payload, user_id: user!.id })
+      const created = await addInvoice.mutateAsync({ ...payload, user_id: user!.id })
+      try {
+        const subtotal = computeSubtotal(payload.line_items)
+        const tax = computeTax(subtotal, payload.tax_rate)
+        await addTrackerInvoice.mutateAsync({
+          user_id: user!.id,
+          invoice_number: created.invoice_number,
+          client_name: created.client_name,
+          amount: computeTotal(subtotal, tax),
+          status: 'pending',
+          issue_date: created.invoice_date,
+          due_date: created.due_date,
+        })
+      } catch (err) {
+        // Don't let a tracker-linking failure hide that the PDF invoice itself saved fine.
+        console.error('Failed to create linked tracker invoice:', err)
+      }
     }
     setFormOpen(false)
     setEditTarget(null)
