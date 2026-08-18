@@ -183,18 +183,22 @@ export function FileListView({ files, expenses, onDelete, onLinkChange }: FileLi
                   {format(new Date(file.uploaded_at), 'MMM d, yyyy')}
                 </td>
                 <td className="px-4 py-3 hidden lg:table-cell">
-                  <select
-                    value={file.expense_id ?? ''}
-                    onChange={(e) => onLinkChange(file.id, e.target.value)}
-                    className="w-full max-w-[180px] text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
-                  >
-                    <option value="">Not linked</option>
-                    {expenses.map((exp) => (
-                      <option key={exp.id} value={exp.id}>
-                        {exp.title} (${exp.amount})
-                      </option>
-                    ))}
-                  </select>
+                  {file.category === 'receipt' ? (
+                    <select
+                      value={file.expense_id ?? ''}
+                      onChange={(e) => onLinkChange(file.id, e.target.value)}
+                      className="w-full max-w-[180px] text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+                    >
+                      <option value="">Not linked</option>
+                      {expenses.map((exp) => (
+                        <option key={exp.id} value={exp.id}>
+                          {exp.title} (${exp.amount})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
                 </td>
                 <td className="px-6 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">

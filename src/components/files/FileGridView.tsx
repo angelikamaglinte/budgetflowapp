@@ -80,20 +80,22 @@ export function FileGridView({ files, expenses, onDelete, onLinkChange }: FileGr
                 {format(new Date(file.uploaded_at), 'MMM d, yyyy')}
               </p>
             </div>
-            {/* Link to expense */}
-            <select
-              value={file.expense_id ?? ''}
-              onChange={(e) => onLinkChange(file.id, e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
-              title="Link to expense"
-            >
-              <option value="">Link to expense...</option>
-              {expenses.map((exp) => (
-                <option key={exp.id} value={exp.id}>
-                  {exp.title} (${exp.amount})
-                </option>
-              ))}
-            </select>
+            {/* Link to expense — only meaningful for receipts (proof of an expense) */}
+            {file.category === 'receipt' && (
+              <select
+                value={file.expense_id ?? ''}
+                onChange={(e) => onLinkChange(file.id, e.target.value)}
+                className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+                title="Link to expense"
+              >
+                <option value="">Link to expense...</option>
+                {expenses.map((exp) => (
+                  <option key={exp.id} value={exp.id}>
+                    {exp.title} (${exp.amount})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </motion.div>
       ))}
