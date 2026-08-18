@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm, useWatch, Controller } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -76,10 +76,23 @@ export function InvoiceForm({ open, onClose, onSubmit, initial, defaultClientNam
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Invoice #</label>
-              <input
-                {...register('invoice_number')}
-                placeholder="INV-001"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              <Controller
+                control={control}
+                name="invoice_number"
+                render={({ field }) => (
+                  <div className="flex items-stretch rounded-xl border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent">
+                    <span className="flex items-center px-3 bg-gray-50 text-sm text-gray-500 border-r border-gray-200 select-none">
+                      INV-
+                    </span>
+                    <input
+                      value={field.value.replace(/^inv-?/i, '')}
+                      onChange={(e) => field.onChange(e.target.value ? `INV-${e.target.value}` : '')}
+                      onBlur={field.onBlur}
+                      placeholder="001"
+                      className="flex-1 min-w-0 px-3 py-2.5 text-sm focus:outline-none"
+                    />
+                  </div>
+                )}
               />
               {errors.invoice_number && <p className="mt-1 text-xs text-red-600">{errors.invoice_number.message}</p>}
             </div>
