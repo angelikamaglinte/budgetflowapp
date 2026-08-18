@@ -1,11 +1,53 @@
+import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
-import { FileText, Trash2, ExternalLink, ImageIcon } from 'lucide-react'
+import { FileText, Trash2, ExternalLink, ImageIcon, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { FileTypeBadge } from './FileTypeBadge'
+import { cn } from '@/lib/utils'
 import type { Receipt, Expense } from '@/types'
 
 function isImage(filename: string) {
   return /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(filename)
+}
+
+type SortKey = 'filename' | 'category' | 'uploaded_at'
+type SortDir = 'asc' | 'desc'
+
+const DEFAULT_DIR: Record<SortKey, SortDir> = {
+  filename: 'asc',
+  category: 'asc',
+  uploaded_at: 'desc',
+}
+
+function SortHeader({
+  label,
+  active,
+  dir,
+  onClick,
+  className,
+}: {
+  label: string
+  active: boolean
+  dir: SortDir
+  onClick: () => void
+  className?: string
+}) {
+  return (
+    <th className={cn('text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', className)}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn('flex items-center gap-1 transition-colors hover:text-gray-700', active && 'text-gray-600')}
+      >
+        {label}
+        {active ? (
+          dir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-40" />
+        )}
+      </button>
+    </th>
+  )
 }
 
 function FileThumb({ file }: { file: Receipt }) {
@@ -28,11 +70,34 @@ interface FileListViewProps {
 }
 
 export function FileListView({ files, expenses, onDelete, onLinkChange }: FileListViewProps) {
+  const [sortKey, setSortKey] = useState<SortKey>('uploaded_at')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(DEFAULT_DIR[key])
+    }
+  }
+
+  const sortedFiles = useMemo(() => {
+    const sorted = [...files].sort((a, b) => {
+      const cmp =
+        sortKey === 'uploaded_at'
+          ? new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime()
+          : a[sortKey].localeCompare(b[sortKey])
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+    return sorted
+  }, [files, sortKey, sortDir])
+
   return (
     <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] overflow-hidden">
       {/* Mobile row list */}
       <div className="sm:hidden flex flex-col divide-y divide-gray-50">
-        {files.map((file, i) => (
+        {sortedFiles.map((file, i) => (
           <motion.div
             key={file.id}
             initial={{ opacity: 0, y: 6 }}
@@ -75,15 +140,27 @@ export function FileListView({ files, expenses, onDelete, onLinkChange }: FileLi
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">File</th>
-              <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Category</th>
-              <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Uploaded</th>
+              <SortHeader
+                label="File"
+                active={sortKey === 'filename'}
+                dir={sortDir}
+                onClick={() => toggleSort('filename')}
+                className="px-6"
+              />
+              <SortHeader label="Category" active={sortKey === 'category'} dir={sortDir} onClick={() => toggleSort('category')} />
+              <SortHeader
+                label="Uploaded"
+                active={sortKey === 'uploaded_at'}
+                dir={sortDir}
+                onClick={() => toggleSort('uploaded_at')}
+                className="hidden md:table-cell"
+              />
               <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Linked Expense</th>
               <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {files.map((file, i) => (
+            {sortedFiles.map((file, i) => (
               <motion.tr
                 key={file.id}
                 initial={{ opacity: 0 }}
