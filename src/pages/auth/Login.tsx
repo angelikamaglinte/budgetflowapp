@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { TrendingUp, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
-import { supabase } from '@/lib/supabase'
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -28,8 +27,8 @@ export default function Login() {
     setAuthError(null)
     try {
       await signIn(values.email, values.password)
-      const { data } = await supabase.from('business_profiles').select('onboarding_completed').maybeSingle()
-      void navigate(data?.onboarding_completed ? '/dashboard' : '/onboarding')
+      // ProtectedRoute checks onboarding status and redirects if needed.
+      void navigate('/dashboard')
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Login failed')
     }
