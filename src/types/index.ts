@@ -19,6 +19,10 @@ export type PurchasePlan = Database['public']['Tables']['purchase_plans']['Row']
 export type PurchasePlanInsert = Database['public']['Tables']['purchase_plans']['Insert']
 export type PurchasePlanUpdate = Database['public']['Tables']['purchase_plans']['Update']
 
+export type Task = Database['public']['Tables']['tasks']['Row']
+export type TaskInsert = Database['public']['Tables']['tasks']['Insert']
+export type TaskUpdate = Database['public']['Tables']['tasks']['Update']
+
 export type InvoiceReminder = Database['public']['Tables']['invoice_reminders']['Row']
 export type InvoiceReminderInsert = Database['public']['Tables']['invoice_reminders']['Insert']
 export type InvoiceReminderUpdate = Database['public']['Tables']['invoice_reminders']['Update']

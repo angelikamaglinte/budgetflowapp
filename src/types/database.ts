@@ -450,6 +450,32 @@ export interface Database {
           created_at?: string
         }
       }
+      tasks: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          due_date: string | null
+          completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          title: string
+          due_date?: string | null
+          completed?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          due_date?: string | null
+          completed?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

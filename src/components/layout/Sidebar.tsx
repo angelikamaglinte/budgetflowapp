@@ -47,6 +47,7 @@ const navItems: (LeafItem | GroupItem)[] = [
       { to: '/tools/invoice-builder', label: 'Invoice Builder' },
       { to: '/tools/recurring-expenses', label: 'Recurring Expenses' },
       { to: '/tools/recurring-invoices', label: 'Recurring Invoices' },
+      { to: '/tools/tasks', label: 'Task Management' },
     ],
   },
   { to: '/contacts', label: 'Contacts', icon: Users },

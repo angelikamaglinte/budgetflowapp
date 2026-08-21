@@ -16,12 +16,21 @@ import {
   addDays,
   subDays,
 } from 'date-fns'
-import { ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarClock, CheckSquare } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useInvoiceReminders } from '@/hooks/useInvoiceReminders'
+import { useTasks } from '@/hooks/useTasks'
 import { getReminderOccurrences } from '@/lib/reminders'
-import type { ReminderOccurrence } from '@/lib/reminders'
-import { cn } from '@/lib/utils'
+import { cn, parseLocalDate } from '@/lib/utils'
+
+interface CalendarEvent {
+  key: string
+  date: Date
+  kind: 'reminder' | 'task'
+  label: string
+  detail?: string | null
+  completed?: boolean
+}
 
 type ViewMode = 'month' | 'week' | 'day'
 
@@ -34,7 +43,9 @@ function getInitialView(): ViewMode {
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function Calendar() {
-  const { data: reminders = [], isLoading } = useInvoiceReminders()
+  const { data: reminders = [], isLoading: remindersLoading } = useInvoiceReminders()
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const isLoading = remindersLoading || tasksLoading
   const [view, setView] = useState<ViewMode>(getInitialView)
   const [anchor, setAnchor] = useState(new Date())
 
@@ -62,21 +73,38 @@ export default function Calendar() {
     return { rangeStart: anchor, rangeEnd: anchor, days: [anchor], title: format(anchor, 'EEEE, MMMM d, yyyy') }
   }, [view, anchor])
 
-  const occurrences = useMemo(
-    () => getReminderOccurrences(reminders, rangeStart, rangeEnd),
-    [reminders, rangeStart, rangeEnd]
-  )
+  const events = useMemo(() => {
+    const reminderEvents: CalendarEvent[] = getReminderOccurrences(reminders, rangeStart, rangeEnd).map((occ, i) => ({
+      key: `reminder-${occ.reminder.id}-${i}`,
+      date: occ.date,
+      kind: 'reminder',
+      label: occ.reminder.client_name,
+      detail: occ.reminder.notes,
+    }))
+    const taskEvents: CalendarEvent[] = tasks
+      .filter((t) => t.due_date)
+      .map((t) => ({ date: parseLocalDate(t.due_date!), task: t }))
+      .filter((t) => t.date >= rangeStart && t.date <= rangeEnd)
+      .map(({ date, task }) => ({
+        key: `task-${task.id}`,
+        date,
+        kind: 'task' as const,
+        label: task.title,
+        completed: task.completed,
+      }))
+    return [...reminderEvents, ...taskEvents]
+  }, [reminders, tasks, rangeStart, rangeEnd])
 
-  const occurrencesByDay = useMemo(() => {
-    const map = new Map<string, ReminderOccurrence[]>()
-    for (const occ of occurrences) {
-      const key = format(occ.date, 'yyyy-MM-dd')
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>()
+    for (const event of events) {
+      const key = format(event.date, 'yyyy-MM-dd')
       const list = map.get(key)
-      if (list) list.push(occ)
-      else map.set(key, [occ])
+      if (list) list.push(event)
+      else map.set(key, [event])
     }
     return map
-  }, [occurrences])
+  }, [events])
 
   function goPrev() {
     if (view === 'month') setAnchor((d) => subMonths(d, 1))
@@ -93,7 +121,7 @@ export default function Calendar() {
   }
 
   return (
-    <AppLayout title="Calendar" subtitle="A calendar view of your scheduled invoice reminders" showPeriodSelector={false}>
+    <AppLayout title="Calendar" subtitle="A calendar view of your invoice reminders and tasks" showPeriodSelector={false}>
       {/* Controls */}
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
         <div className="flex items-center gap-2">
@@ -147,10 +175,10 @@ export default function Calendar() {
               ))}
               {days.map((day) => {
                 const key = format(day, 'yyyy-MM-dd')
-                const dayOccurrences = occurrencesByDay.get(key) ?? []
+                const dayEvents = eventsByDay.get(key) ?? []
                 const inCurrentMonth = view === 'week' || isSameMonth(day, anchor)
-                const visiblePills = dayOccurrences.slice(0, view === 'week' ? 6 : 2)
-                const overflow = dayOccurrences.length - visiblePills.length
+                const visiblePills = dayEvents.slice(0, view === 'week' ? 6 : 2)
+                const overflow = dayEvents.length - visiblePills.length
 
                 return (
                   <div
@@ -170,13 +198,18 @@ export default function Calendar() {
                       {format(day, 'd')}
                     </span>
                     <div className="flex flex-col gap-1">
-                      {visiblePills.map((occ, i) => (
+                      {visiblePills.map((event) => (
                         <span
-                          key={`${occ.reminder.id}-${i}`}
-                          title={occ.reminder.client_name}
-                          className="truncate px-1.5 py-0.5 rounded-md text-[11px] font-medium bg-[#E9F3F7] text-[#487CA5]"
+                          key={event.key}
+                          title={event.label}
+                          className={cn(
+                            'truncate px-1.5 py-0.5 rounded-md text-[11px] font-medium',
+                            event.kind === 'reminder' && 'bg-[#E9F3F7] text-[#487CA5]',
+                            event.kind === 'task' && !event.completed && 'bg-[#EEF3ED] text-[#548164]',
+                            event.kind === 'task' && event.completed && 'bg-gray-100 text-gray-400 line-through'
+                          )}
                         >
-                          {occ.reminder.client_name}
+                          {event.label}
                         </span>
                       ))}
                       {overflow > 0 && (
@@ -191,7 +224,7 @@ export default function Calendar() {
 
           {view === 'day' && (
             <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-6">
-              {(occurrencesByDay.get(format(anchor, 'yyyy-MM-dd')) ?? []).length === 0 ? (
+              {(eventsByDay.get(format(anchor, 'yyyy-MM-dd')) ?? []).length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -201,22 +234,36 @@ export default function Calendar() {
                   <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
                     <CalendarClock className="w-6 h-6 text-primary-400" />
                   </div>
-                  <p className="text-gray-500 text-sm">No reminders on this day</p>
+                  <p className="text-gray-500 text-sm">Nothing scheduled on this day</p>
                 </motion.div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {(occurrencesByDay.get(format(anchor, 'yyyy-MM-dd')) ?? []).map((occ, i) => (
+                  {(eventsByDay.get(format(anchor, 'yyyy-MM-dd')) ?? []).map((event, i) => (
                     <motion.div
-                      key={`${occ.reminder.id}-${i}`}
+                      key={event.key}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: i * 0.03 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-[#E9F3F7]"
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-xl',
+                        event.kind === 'reminder' && 'bg-[#E9F3F7]',
+                        event.kind === 'task' && !event.completed && 'bg-[#EEF3ED]',
+                        event.kind === 'task' && event.completed && 'bg-gray-50'
+                      )}
                     >
-                      <CalendarClock className="w-4 h-4 text-[#487CA5] shrink-0" />
+                      {event.kind === 'reminder' ? (
+                        <CalendarClock className="w-4 h-4 text-[#487CA5] shrink-0" />
+                      ) : (
+                        <CheckSquare className={cn('w-4 h-4 shrink-0', event.completed ? 'text-gray-400' : 'text-[#548164]')} />
+                      )}
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{occ.reminder.client_name}</p>
-                        {occ.reminder.notes && <p className="text-xs text-gray-500 truncate">{occ.reminder.notes}</p>}
+                        <p className={cn(
+                          'text-sm font-medium',
+                          event.kind === 'task' && event.completed ? 'text-gray-400 line-through' : 'text-gray-900'
+                        )}>
+                          {event.label}
+                        </p>
+                        {event.detail && <p className="text-xs text-gray-500 truncate">{event.detail}</p>}
                       </div>
                     </motion.div>
                   ))}

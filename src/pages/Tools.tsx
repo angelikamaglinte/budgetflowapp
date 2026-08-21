@@ -4,12 +4,14 @@ import { SchedulerSection } from '@/components/scheduler/SchedulerSection'
 import { InvoiceBuilderSection } from '@/components/invoiceBuilder/InvoiceBuilderSection'
 import { RecurringExpensesSection } from '@/components/automations/RecurringExpensesSection'
 import { RecurringInvoicesSection } from '@/components/automations/RecurringInvoicesSection'
+import { TasksSection } from '@/components/tasks/TasksSection'
 
 const TAB_LABELS: Record<string, string> = {
   scheduler: 'Scheduler',
   'invoice-builder': 'Invoice Builder',
   'recurring-expenses': 'Recurring Expenses',
   'recurring-invoices': 'Recurring Invoices',
+  tasks: 'Task Management',
 }
 
 export default function Tools() {
@@ -25,6 +27,7 @@ export default function Tools() {
       {tab === 'invoice-builder' && <InvoiceBuilderSection />}
       {tab === 'recurring-expenses' && <RecurringExpensesSection />}
       {tab === 'recurring-invoices' && <RecurringInvoicesSection />}
+      {tab === 'tasks' && <TasksSection />}
     </AppLayout>
   )
 }
