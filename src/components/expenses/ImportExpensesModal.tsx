@@ -1,7 +1,17 @@
 import { useMemo, useRef, useState } from 'react'
 import Papa from 'papaparse'
-import { Upload, X, ChevronLeft, AlertCircle } from 'lucide-react'
+import { Upload, X, ChevronLeft, AlertCircle, Briefcase, User, MoreHorizontal } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import {
   parseFlexibleDate,
@@ -16,6 +26,7 @@ import {
 } from '@/lib/csvImport'
 import type { ParsedImportRow, SplitPart } from '@/lib/csvImport'
 import { ImportReviewTable } from './ImportReviewTable'
+import { EXPENSE_CATEGORIES } from '@/types'
 import type { Expense, ExpenseInsert, ExpenseType } from '@/types'
 
 type Step = 'upload' | 'mapping' | 'review'
@@ -50,6 +61,8 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
   const [skippedCount, setSkippedCount] = useState(0)
   const [importing, setImporting] = useState(false)
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
   const { headers: csvHeaders, rows: csvRows } = useMemo(
     () => deriveHeadersAndRows(rawRows, hasHeaderRow),
     [rawRows, hasHeaderRow]
@@ -70,6 +83,7 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
     setCreditColumn('')
     setRows([])
     setSkippedCount(0)
+    setSelectedIds(new Set())
   }
 
   function handleClose() {
@@ -229,6 +243,31 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
           : r
       )
     })
+  }
+
+  // Bulk edit — check off a batch of rows (e.g. every "WU TRANSFER" row)
+  // and apply one category/type change to all of them at once via the
+  // actions menu, instead of clicking through each row's dropdown.
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  function toggleSelectAll(selected: boolean) {
+    setSelectedIds(selected ? new Set(rows.filter((r) => !r.isSplit).map((r) => r.id)) : new Set())
+  }
+  function applyBulkCategory(category: string) {
+    if (selectedIds.size === 0) return
+    setRows((prev) => prev.map((r) => (selectedIds.has(r.id) && !r.isSplit ? { ...r, category } : r)))
+    setSelectedIds(new Set())
+  }
+  function applyBulkType(type: ExpenseType) {
+    if (selectedIds.size === 0) return
+    setRows((prev) => prev.map((r) => (selectedIds.has(r.id) && !r.isSplit ? { ...r, type } : r)))
+    setSelectedIds(new Set())
   }
 
   // Splitting handles the case where one bank transaction is really part
@@ -536,10 +575,84 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
               Uncheck anything you don't want — like e-transfers or internal transfers — and adjust category or type as needed.
             </p>
 
+            {selectedIds.size > 0 && (
+              <div className="flex items-center justify-between gap-3 p-3 bg-primary-50 border border-primary-100 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-primary-800">{selectedIds.size} selected</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds(new Set())}
+                    className="text-xs text-primary-600 hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        className="flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition"
+                      />
+                    }
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>Change category</DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {EXPENSE_CATEGORIES.map((cat) => (
+                          <DropdownMenuItem
+                            key={cat}
+                            render={
+                              <button
+                                type="button"
+                                onClick={() => applyBulkCategory(cat)}
+                                className="flex w-full cursor-pointer items-center"
+                              />
+                            }
+                          >
+                            {cat}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      render={
+                        <button
+                          type="button"
+                          onClick={() => applyBulkType('business')}
+                          className="flex w-full cursor-pointer items-center gap-1.5"
+                        />
+                      }
+                    >
+                      <Briefcase className="w-3.5 h-3.5" /> Update to Business expense
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      render={
+                        <button
+                          type="button"
+                          onClick={() => applyBulkType('personal')}
+                          className="flex w-full cursor-pointer items-center gap-1.5"
+                        />
+                      }
+                    >
+                      <User className="w-3.5 h-3.5" /> Update to Personal expense
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             <ImportReviewTable
               rows={rows}
+              selectedIds={selectedIds}
               onToggleRow={toggleRow}
               onToggleAll={toggleAll}
+              onToggleSelect={toggleSelect}
+              onToggleSelectAll={toggleSelectAll}
               onChangeCategory={changeCategory}
               onChangeType={changeType}
               onApplyToSimilar={applyToSimilar}

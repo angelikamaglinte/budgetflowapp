@@ -8,8 +8,11 @@ import type { ParsedImportRow, SplitPart } from '@/lib/csvImport'
 
 interface ImportReviewTableProps {
   rows: ParsedImportRow[]
+  selectedIds: Set<string>
   onToggleRow: (id: string) => void
   onToggleAll: (included: boolean) => void
+  onToggleSelect: (id: string) => void
+  onToggleSelectAll: (selected: boolean) => void
   onChangeCategory: (id: string, category: string) => void
   onChangeType: (id: string, type: ExpenseType) => void
   onApplyToSimilar: (id: string) => void
@@ -22,8 +25,11 @@ interface ImportReviewTableProps {
 
 export function ImportReviewTable({
   rows,
+  selectedIds,
   onToggleRow,
   onToggleAll,
+  onToggleSelect,
+  onToggleSelectAll,
   onChangeCategory,
   onChangeType,
   onApplyToSimilar,
@@ -35,6 +41,9 @@ export function ImportReviewTable({
 }: ImportReviewTableProps) {
   const allIncluded = rows.every((r) => r.included)
   const someIncluded = rows.some((r) => r.included)
+  const selectableRows = rows.filter((r) => !r.isSplit)
+  const allSelected = selectableRows.length > 0 && selectableRows.every((r) => selectedIds.has(r.id))
+  const someSelected = selectableRows.some((r) => selectedIds.has(r.id))
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -49,6 +58,18 @@ export function ImportReviewTable({
                   ref={(el) => { if (el) el.indeterminate = someIncluded && !allIncluded }}
                   onChange={(e) => onToggleAll(e.target.checked)}
                   className="w-4 h-4 accent-primary-600 cursor-pointer"
+                  title="Include in import"
+                />
+              </th>
+              <th className="px-2 py-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected }}
+                  onChange={(e) => onToggleSelectAll(e.target.checked)}
+                  disabled={selectableRows.length === 0}
+                  className="w-4 h-4 accent-gray-500 cursor-pointer disabled:opacity-30"
+                  title="Select for bulk edit"
                 />
               </th>
               <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-3">Date</th>
@@ -84,6 +105,17 @@ export function ImportReviewTable({
                       onChange={() => onToggleRow(row.id)}
                       disabled={invalid}
                       className="w-4 h-4 accent-primary-600 cursor-pointer"
+                      title="Include in import"
+                    />
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(row.id)}
+                      onChange={() => onToggleSelect(row.id)}
+                      disabled={row.isSplit}
+                      className="w-4 h-4 accent-gray-500 cursor-pointer disabled:opacity-30"
+                      title="Select for bulk edit"
                     />
                   </td>
                   <td className="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">
@@ -172,6 +204,7 @@ export function ImportReviewTable({
                 </tr>
                 {row.isSplit && (
                   <tr className={cn('border-b border-gray-50 last:border-0 bg-gray-50/70', !row.included && 'opacity-40')}>
+                    <td />
                     <td />
                     <td colSpan={6} className="px-3 py-3">
                       <div className="flex flex-col gap-2">
