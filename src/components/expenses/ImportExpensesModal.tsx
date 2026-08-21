@@ -575,30 +575,39 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
               Uncheck anything you don't want — like e-transfers or internal transfers — and adjust category or type as needed.
             </p>
 
-            {selectedIds.size > 0 && (
-              <div className="flex items-center justify-between gap-3 p-3 bg-primary-50 border border-primary-100 rounded-xl">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleSelectAll(true)}
+                  className="text-xs font-medium text-gray-600 hover:text-primary-600"
+                >
+                  Select all
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleSelectAll(false)}
+                  className="text-xs font-medium text-gray-400 hover:text-gray-600"
+                >
+                  Clear
+                </button>
+                {selectedIds.size > 0 && (
                   <span className="text-sm font-medium text-primary-800">{selectedIds.size} selected</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds(new Set())}
-                    className="text-xs text-primary-600 hover:underline"
-                  >
-                    Clear
-                  </button>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button
-                        type="button"
-                        className="flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition"
-                      />
-                    }
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52">
+                )}
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      disabled={selectedIds.size === 0}
+                      className="flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition"
+                    />
+                  }
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>Change category</DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
@@ -643,8 +652,7 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-            )}
+            </div>
 
             <ImportReviewTable
               rows={rows}
@@ -652,7 +660,6 @@ export function ImportExpensesModal({ open, onClose, existingExpenses, onImport 
               onToggleRow={toggleRow}
               onToggleAll={toggleAll}
               onToggleSelect={toggleSelect}
-              onToggleSelectAll={toggleSelectAll}
               onChangeCategory={changeCategory}
               onChangeType={changeType}
               onApplyToSimilar={applyToSimilar}

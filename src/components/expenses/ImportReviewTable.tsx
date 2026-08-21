@@ -12,7 +12,6 @@ interface ImportReviewTableProps {
   onToggleRow: (id: string) => void
   onToggleAll: (included: boolean) => void
   onToggleSelect: (id: string) => void
-  onToggleSelectAll: (selected: boolean) => void
   onChangeCategory: (id: string, category: string) => void
   onChangeType: (id: string, type: ExpenseType) => void
   onApplyToSimilar: (id: string) => void
@@ -29,7 +28,6 @@ export function ImportReviewTable({
   onToggleRow,
   onToggleAll,
   onToggleSelect,
-  onToggleSelectAll,
   onChangeCategory,
   onChangeType,
   onApplyToSimilar,
@@ -41,9 +39,6 @@ export function ImportReviewTable({
 }: ImportReviewTableProps) {
   const allIncluded = rows.every((r) => r.included)
   const someIncluded = rows.some((r) => r.included)
-  const selectableRows = rows.filter((r) => !r.isSplit)
-  const allSelected = selectableRows.length > 0 && selectableRows.every((r) => selectedIds.has(r.id))
-  const someSelected = selectableRows.some((r) => selectedIds.has(r.id))
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -59,17 +54,6 @@ export function ImportReviewTable({
                   onChange={(e) => onToggleAll(e.target.checked)}
                   className="w-4 h-4 accent-primary-600 cursor-pointer"
                   title="Include in import"
-                />
-              </th>
-              <th className="px-2 py-3 w-10">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected }}
-                  onChange={(e) => onToggleSelectAll(e.target.checked)}
-                  disabled={selectableRows.length === 0}
-                  className="w-4 h-4 accent-gray-500 cursor-pointer disabled:opacity-30"
-                  title="Select for bulk edit"
                 />
               </th>
               <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-3">Date</th>
@@ -95,7 +79,8 @@ export function ImportReviewTable({
                   className={cn(
                     'border-b border-gray-50 last:border-0',
                     !row.included && 'opacity-40',
-                    row.isDuplicate && row.included && 'bg-[#FAF3DD]/50'
+                    row.isDuplicate && row.included && 'bg-[#FAF3DD]/50',
+                    selectedIds.has(row.id) && 'bg-primary-50/70 ring-1 ring-inset ring-primary-200'
                   )}
                 >
                   <td className="px-4 py-2.5">
@@ -108,20 +93,17 @@ export function ImportReviewTable({
                       title="Include in import"
                     />
                   </td>
-                  <td className="px-2 py-2.5">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(row.id)}
-                      onChange={() => onToggleSelect(row.id)}
-                      disabled={row.isSplit}
-                      className="w-4 h-4 accent-gray-500 cursor-pointer disabled:opacity-30"
-                      title="Select for bulk edit"
-                    />
-                  </td>
-                  <td className="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">
+                  <td
+                    onClick={() => !row.isSplit && onToggleSelect(row.id)}
+                    title={row.isSplit ? undefined : 'Click to select for bulk edit'}
+                    className={cn('px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap', !row.isSplit && 'cursor-pointer')}
+                  >
                     {row.date ?? <span className="text-red-500 text-xs">Unreadable: "{row.rawDate}"</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-sm text-gray-700 max-w-55">
+                  <td
+                    onClick={() => !row.isSplit && onToggleSelect(row.id)}
+                    className={cn('px-3 py-2.5 text-sm text-gray-700 max-w-55', !row.isSplit && 'cursor-pointer')}
+                  >
                     <div className="truncate" title={row.description}>
                       {row.description}
                       {row.isDuplicate && (
@@ -133,7 +115,7 @@ export function ImportReviewTable({
                     {!invalid && differingSiblings.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => onApplyToSimilar(row.id)}
+                        onClick={(e) => { e.stopPropagation(); onApplyToSimilar(row.id) }}
                         className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:underline"
                       >
                         <CopyPlus className="w-3 h-3" /> Apply to {differingSiblings.length} similar
@@ -204,7 +186,6 @@ export function ImportReviewTable({
                 </tr>
                 {row.isSplit && (
                   <tr className={cn('border-b border-gray-50 last:border-0 bg-gray-50/70', !row.included && 'opacity-40')}>
-                    <td />
                     <td />
                     <td colSpan={6} className="px-3 py-3">
                       <div className="flex flex-col gap-2">
