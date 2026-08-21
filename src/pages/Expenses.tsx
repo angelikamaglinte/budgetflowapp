@@ -1,19 +1,36 @@
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
-import { Plus, Search, Pencil, Trash2, Download, Upload, LayoutList, Briefcase, User } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Download, Upload, LayoutList, Briefcase, User, MoreHorizontal } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from '@/components/ui/dropdown-menu'
 import { CategoryBadge } from '@/components/expenses/CategoryBadge'
 import { ExpenseForm } from '@/components/expenses/ExpenseForm'
 import type { ExpenseFormValues } from '@/components/expenses/ExpenseForm'
 import { ImportExpensesModal } from '@/components/expenses/ImportExpensesModal'
-import { useExpenses, useAddExpense, useUpdateExpense, useDeleteExpense, useBulkAddExpenses } from '@/hooks/useExpenses'
+import {
+  useExpenses,
+  useAddExpense,
+  useUpdateExpense,
+  useDeleteExpense,
+  useBulkAddExpenses,
+  useBulkUpdateExpenses,
+} from '@/hooks/useExpenses'
 import { useAuth } from '@/contexts/AuthContext'
 import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
-import type { Expense, ExpenseInsert } from '@/types'
+import type { Expense, ExpenseInsert, ExpenseType } from '@/types'
 import { cn, parseLocalDate } from '@/lib/utils'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 
@@ -32,6 +49,7 @@ export default function Expenses() {
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
   const bulkAddExpenses = useBulkAddExpenses()
+  const bulkUpdateExpenses = useBulkUpdateExpenses()
 
   const { periodFilter } = usePeriod()
   const [activeTab, setActiveTab] = useState<TabType>('all')
@@ -41,6 +59,7 @@ export default function Expenses() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Expenses filtered by global period (used for summary cards)
   const periodExpenses = useMemo(() => {
@@ -101,6 +120,28 @@ export default function Expenses() {
     exportExpenses(filtered, label)
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  function toggleSelectAll(selected: boolean) {
+    setSelectedIds(selected ? new Set(filtered.map((e) => e.id)) : new Set())
+  }
+  async function applyBulkCategory(category: string) {
+    if (selectedIds.size === 0) return
+    await bulkUpdateExpenses.mutateAsync({ ids: Array.from(selectedIds), update: { category } })
+    setSelectedIds(new Set())
+  }
+  async function applyBulkType(type: ExpenseType) {
+    if (selectedIds.size === 0) return
+    await bulkUpdateExpenses.mutateAsync({ ids: Array.from(selectedIds), update: { type } })
+    setSelectedIds(new Set())
+  }
+
   return (
     <AppLayout
       title="Expenses"
@@ -138,7 +179,7 @@ export default function Expenses() {
             transition={{ duration: 0.25, delay: i * 0.05 }}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => { setActiveTab(tab.id); setSelectedIds(new Set()) }}
             className={cn(
               'text-left p-4 rounded-2xl border transition-all',
               activeTab === tab.id
@@ -167,14 +208,14 @@ export default function Expenses() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setSelectedIds(new Set()) }}
             placeholder="Search expenses..."
             className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={(e) => { setCategoryFilter(e.target.value); setSelectedIds(new Set()) }}
           className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="">All categories</option>
@@ -191,6 +232,78 @@ export default function Expenses() {
           </div>
         )}
       </div>
+
+      {/* Bulk actions */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 p-3 mb-4 bg-primary-50 border border-primary-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-primary-800">{selectedIds.size} selected</span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-primary-600 hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  className="flex items-center justify-center p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition"
+                />
+              }
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change category</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {EXPENSE_CATEGORIES.map((cat) => (
+                    <DropdownMenuItem
+                      key={cat}
+                      render={
+                        <button
+                          type="button"
+                          onClick={() => void applyBulkCategory(cat)}
+                          className="flex w-full cursor-pointer items-center"
+                        />
+                      }
+                    >
+                      {cat}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                render={
+                  <button
+                    type="button"
+                    onClick={() => void applyBulkType('business')}
+                    className="flex w-full cursor-pointer items-center gap-1.5"
+                  />
+                }
+              >
+                <Briefcase className="w-3.5 h-3.5" /> Update to Business expense
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={
+                  <button
+                    type="button"
+                    onClick={() => void applyBulkType('personal')}
+                    className="flex w-full cursor-pointer items-center gap-1.5"
+                  />
+                }
+              >
+                <User className="w-3.5 h-3.5" /> Update to Personal expense
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] overflow-hidden">
@@ -282,6 +395,21 @@ export default function Expenses() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
+                    <th className="px-4 py-4 w-10">
+                      <input
+                        type="checkbox"
+                        checked={filtered.length > 0 && filtered.every((e) => selectedIds.has(e.id))}
+                        ref={(el) => {
+                          if (el) {
+                            const some = filtered.some((e) => selectedIds.has(e.id))
+                            const all = filtered.length > 0 && filtered.every((e) => selectedIds.has(e.id))
+                            el.indeterminate = some && !all
+                          }
+                        }}
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                        className="w-4 h-4 accent-primary-600 cursor-pointer"
+                      />
+                    </th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Date</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Title</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Vendor</th>
@@ -302,6 +430,14 @@ export default function Expenses() {
                       transition={{ duration: 0.2, delay: Math.min(i, 15) * 0.02 }}
                       className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                     >
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(exp.id)}
+                          onChange={() => toggleSelect(exp.id)}
+                          className="w-4 h-4 accent-primary-600 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                         {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                       </td>

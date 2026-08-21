@@ -47,6 +47,19 @@ export function useBulkAddExpenses() {
   })
 }
 
+export function useBulkUpdateExpenses() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids, update }: { ids: string[]; update: Partial<Pick<Expense, 'category' | 'type'>> }) => {
+      const { error } = await supabase.from('expenses').update(update).in('id', ids)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['expenses'] })
+    },
+  })
+}
+
 export function useUpdateExpense() {
   const queryClient = useQueryClient()
   return useMutation({
