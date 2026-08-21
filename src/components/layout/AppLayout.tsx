@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { format, subMonths } from 'date-fns'
-import { CalendarDays, Menu, TrendingUp } from 'lucide-react'
+import { CalendarDays, ChevronDown, Menu, TrendingUp } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { usePeriod } from '@/contexts/PeriodContext'
+import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -27,9 +37,17 @@ const monthOptions = Array.from({ length: 24 }, (_, i) => {
   return { value: format(d, 'yyyy-MM'), label: format(d, 'MMMM yyyy') }
 })
 
+function periodLabel(value: string): string {
+  if (!value) return 'All time'
+  return yearOptions.find((y) => y.value === value)?.label
+    ?? monthOptions.find((m) => m.value === value)?.label
+    ?? 'All time'
+}
+
 export function AppLayout({ children, title, subtitle, action, showPeriodSelector = true }: AppLayoutProps) {
   const { periodFilter, setPeriodFilter } = usePeriod()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [periodMenuOpen, setPeriodMenuOpen] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-secondary">
@@ -61,26 +79,51 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
 
             {/* Global period selector */}
             {showPeriodSelector && (
-              <div className="flex items-center gap-2 shrink-0">
-                <CalendarDays className="w-4 h-4 text-gray-400" />
-                <select
-                  value={periodFilter}
-                  onChange={(e) => setPeriodFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              <DropdownMenu onOpenChange={setPeriodMenuOpen}>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 hover:border-gray-300 transition shrink-0"
+                    />
+                  }
                 >
-                  <option value="">All time</option>
-                  <optgroup label="Year">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  {periodLabel(periodFilter)}
+                  <ChevronDown className={cn('w-3.5 h-3.5 text-gray-400 transition-transform', periodMenuOpen && 'rotate-180')} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="max-h-96 w-52">
+                  <DropdownMenuRadioGroup value={periodFilter} onValueChange={(v) => setPeriodFilter(String(v ?? ''))}>
+                    <DropdownMenuRadioItem
+                      value=""
+                      render={<button type="button" className="flex w-full cursor-pointer items-center" />}
+                    >
+                      All time
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuLabel>Year</DropdownMenuLabel>
                     {yearOptions.map((y) => (
-                      <option key={y.value} value={y.value}>{y.label}</option>
+                      <DropdownMenuRadioItem
+                        key={y.value}
+                        value={y.value}
+                        render={<button type="button" className="flex w-full cursor-pointer items-center" />}
+                      >
+                        {y.label}
+                      </DropdownMenuRadioItem>
                     ))}
-                  </optgroup>
-                  <optgroup label="Month">
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Month</DropdownMenuLabel>
                     {monthOptions.map((m) => (
-                      <option key={m.value} value={m.value}>{m.label}</option>
+                      <DropdownMenuRadioItem
+                        key={m.value}
+                        value={m.value}
+                        render={<button type="button" className="flex w-full cursor-pointer items-center" />}
+                      >
+                        {m.label}
+                      </DropdownMenuRadioItem>
                     ))}
-                  </optgroup>
-                </select>
-              </div>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {action && <div className="shrink-0">{action}</div>}
