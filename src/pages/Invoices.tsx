@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { motion } from 'motion/react'
-import { Plus, Search, Pencil, Trash2, CheckCircle, Download } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, CheckCircle, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Modal } from '@/components/ui/Modal'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -18,7 +18,57 @@ import { exportInvoices } from '@/lib/export'
 import { getEffectiveStatus } from '@/lib/invoiceStatus'
 import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
-import { parseLocalDate } from '@/lib/utils'
+import { cn, parseLocalDate } from '@/lib/utils'
+
+type SortKey = 'invoice_number' | 'client_name' | 'issue_date' | 'due_date' | 'date_paid' | 'status' | 'amount'
+type SortDir = 'asc' | 'desc'
+
+const DEFAULT_DIR: Record<SortKey, SortDir> = {
+  invoice_number: 'asc',
+  client_name: 'asc',
+  issue_date: 'desc',
+  due_date: 'desc',
+  date_paid: 'desc',
+  status: 'asc',
+  amount: 'desc',
+}
+
+function SortHeader({
+  label,
+  active,
+  dir,
+  onClick,
+  align = 'left',
+  className,
+}: {
+  label: string
+  active: boolean
+  dir: SortDir
+  onClick: () => void
+  align?: 'left' | 'right'
+  className?: string
+}) {
+  return (
+    <th className={cn('text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', align === 'right' ? 'text-right' : 'text-left', className)}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          'flex items-center gap-1 transition-colors hover:text-gray-700',
+          align === 'right' && 'ml-auto',
+          active && 'text-gray-600'
+        )}
+      >
+        {label}
+        {active ? (
+          dir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-40" />
+        )}
+      </button>
+    </th>
+  )
+}
 
 export default function Invoices() {
   const { user } = useAuth()
@@ -39,6 +89,17 @@ export default function Invoices() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [prefillClientName, setPrefillClientName] = useState<string | undefined>(undefined)
   const [transferChecklistInvoice, setTransferChecklistInvoice] = useState<Invoice | null>(null)
+  const [sortKey, setSortKey] = useState<SortKey>('issue_date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  function toggleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir(DEFAULT_DIR[key])
+    }
+  }
 
   useEffect(() => {
     const state = location.state as { prefillClientName?: string } | null
@@ -60,6 +121,36 @@ export default function Invoices() {
       return matchPeriod && matchSearch && matchStatus
     })
   }, [invoices, periodFilter, search, statusFilter])
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      let cmp: number
+      switch (sortKey) {
+        case 'invoice_number':
+          cmp = a.invoice_number.localeCompare(b.invoice_number)
+          break
+        case 'client_name':
+          cmp = a.client_name.localeCompare(b.client_name)
+          break
+        case 'status':
+          cmp = getEffectiveStatus(a).localeCompare(getEffectiveStatus(b))
+          break
+        case 'amount':
+          cmp = a.amount - b.amount
+          break
+        default: {
+          // Nullable date columns: rows missing the date always sort last.
+          const aVal = a[sortKey]
+          const bVal = b[sortKey]
+          if (!aVal && !bVal) cmp = 0
+          else if (!aVal) return 1
+          else if (!bVal) return -1
+          else cmp = new Date(aVal).getTime() - new Date(bVal).getTime()
+        }
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [filtered, sortKey, sortDir])
 
   const totalPaid = filtered
     .filter((i) => i.status === 'paid')
@@ -197,7 +288,7 @@ export default function Invoices() {
           <>
             {/* Mobile card list */}
             <div className="sm:hidden flex flex-col divide-y divide-gray-50">
-              {filtered.map((inv, i) => (
+              {sorted.map((inv, i) => (
                 <motion.div
                   key={inv.id}
                   initial={{ opacity: 0, y: 6 }}
@@ -251,18 +342,36 @@ export default function Invoices() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Invoice #</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Client</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden md:table-cell">Issue Date</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Due Date</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Date Paid</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Status</th>
-                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4">Amount</th>
+                    <SortHeader label="Invoice #" active={sortKey === 'invoice_number'} dir={sortDir} onClick={() => toggleSort('invoice_number')} className="px-6" />
+                    <SortHeader label="Client" active={sortKey === 'client_name'} dir={sortDir} onClick={() => toggleSort('client_name')} />
+                    <SortHeader
+                      label="Issue Date"
+                      active={sortKey === 'issue_date'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('issue_date')}
+                      className="hidden md:table-cell"
+                    />
+                    <SortHeader
+                      label="Due Date"
+                      active={sortKey === 'due_date'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('due_date')}
+                      className="hidden lg:table-cell"
+                    />
+                    <SortHeader
+                      label="Date Paid"
+                      active={sortKey === 'date_paid'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('date_paid')}
+                      className="hidden lg:table-cell"
+                    />
+                    <SortHeader label="Status" active={sortKey === 'status'} dir={sortDir} onClick={() => toggleSort('status')} />
+                    <SortHeader label="Amount" active={sortKey === 'amount'} dir={sortDir} onClick={() => toggleSort('amount')} align="right" />
                     <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((inv, i) => (
+                  {sorted.map((inv, i) => (
                     <motion.tr
                       key={inv.id}
                       initial={{ opacity: 0 }}
