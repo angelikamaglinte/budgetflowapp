@@ -28,3 +28,12 @@ supabase/schema.sql
 supabase/migrate-data.sql
 expenses_rows.csv
 invoices_rows.csv
+
+# Test env (holds the test Supabase project's URL/anon key + test user credentials)
+.env.test
+
+# Playwright output
+/playwright-report/
+/test-results/
+/blob-report/
+/e2e/.auth/

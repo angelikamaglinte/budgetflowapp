@@ -11,6 +11,17 @@
       "env": {
         "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
+    },
+    "supabase-test": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=polxndwmcgxfdglpsmfw"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      }
     }
   }
 }
