@@ -74,6 +74,15 @@ export default function Invoices() {
   const { user } = useAuth()
   const { taxRate, savingsRate } = useAllocation()
   const { data: invoices = [], isLoading } = useInvoices()
+
+  const nextInvoiceNumber = useMemo(() => {
+    let max = 0
+    for (const inv of invoices) {
+      const match = inv.invoice_number.match(/(\d+)\s*$/)
+      if (match) max = Math.max(max, parseInt(match[1], 10))
+    }
+    return `INV-${String(max + 1).padStart(3, '0')}`
+  }, [invoices])
   const addInvoice = useAddInvoice()
   const updateInvoice = useUpdateInvoice()
   const deleteInvoice = useDeleteInvoice()
@@ -450,6 +459,7 @@ export default function Invoices() {
         onClose={() => { setFormOpen(false); setEditTarget(null); setPrefillClientName(undefined) }}
         onSubmit={handleSubmit}
         initial={editTarget ?? undefined}
+        nextInvoiceNumber={nextInvoiceNumber}
         defaultClientName={prefillClientName}
       />
 
