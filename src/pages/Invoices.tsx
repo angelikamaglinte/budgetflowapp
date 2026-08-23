@@ -11,6 +11,9 @@ import { InvoiceForm } from '@/components/invoices/InvoiceForm'
 import type { InvoiceFormValues } from '@/components/invoices/InvoiceForm'
 import { TransferChecklistModal } from '@/components/invoices/TransferChecklistModal'
 import { useInvoices, useAddInvoice, useUpdateInvoice, useDeleteInvoice } from '@/hooks/useInvoices'
+import { useResizableColumns } from '@/hooks/useResizableColumns'
+import type { ColumnWidthDef } from '@/hooks/useResizableColumns'
+import { ColumnResizeHandle } from '@/components/ui/ColumnResizeHandle'
 import { useAddNotification } from '@/hooks/useNotifications'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAllocation } from '@/contexts/AllocationContext'
@@ -33,6 +36,20 @@ const DEFAULT_DIR: Record<SortKey, SortDir> = {
   amount: 'desc',
 }
 
+// minWidth is set so each header's label + sort icon always fits on one
+// line, even at the floor — otherwise a wrapped two-word label like
+// "Issue Date" looks broken rather than just "narrow".
+const COLUMN_DEFS: ColumnWidthDef[] = [
+  // Uses px-6 (wider) padding, so it needs more headroom than the px-4 columns.
+  { key: 'invoice_number', defaultWidth: 140, minWidth: 140 },
+  { key: 'client_name', defaultWidth: 200, minWidth: 120 },
+  { key: 'issue_date', defaultWidth: 140, minWidth: 140 },
+  { key: 'due_date', defaultWidth: 140, minWidth: 140 },
+  { key: 'date_paid', defaultWidth: 140, minWidth: 140 },
+  { key: 'status', defaultWidth: 110, minWidth: 100 },
+  { key: 'amount', defaultWidth: 110, minWidth: 100 },
+]
+
 function SortHeader({
   label,
   active,
@@ -40,6 +57,9 @@ function SortHeader({
   onClick,
   align = 'left',
   className,
+  width,
+  onResizeStart,
+  resizing,
 }: {
   label: string
   active: boolean
@@ -47,9 +67,15 @@ function SortHeader({
   onClick: () => void
   align?: 'left' | 'right'
   className?: string
+  width?: number
+  onResizeStart?: (e: React.MouseEvent) => void
+  resizing?: boolean
 }) {
   return (
-    <th className={cn('text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', align === 'right' ? 'text-right' : 'text-left', className)}>
+    <th
+      style={width ? { width, minWidth: width } : undefined}
+      className={cn('relative text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', align === 'right' ? 'text-right' : 'text-left', className)}
+    >
       <button
         type="button"
         onClick={onClick}
@@ -66,6 +92,7 @@ function SortHeader({
           <ArrowUpDown className="w-3 h-3 opacity-40" />
         )}
       </button>
+      {onResizeStart && <ColumnResizeHandle onMouseDown={onResizeStart} active={!!resizing} />}
     </th>
   )
 }
@@ -100,6 +127,7 @@ export default function Invoices() {
   const [transferChecklistInvoice, setTransferChecklistInvoice] = useState<Invoice | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('issue_date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const { widths: colWidths, resizingKey, startResize } = useResizableColumns('budgetflow:invoices:column-widths', COLUMN_DEFS)
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -351,14 +379,34 @@ export default function Invoices() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <SortHeader label="Invoice #" active={sortKey === 'invoice_number'} dir={sortDir} onClick={() => toggleSort('invoice_number')} className="px-6" />
-                    <SortHeader label="Client" active={sortKey === 'client_name'} dir={sortDir} onClick={() => toggleSort('client_name')} />
+                    <SortHeader
+                      label="Invoice #"
+                      active={sortKey === 'invoice_number'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('invoice_number')}
+                      className="px-6"
+                      width={colWidths.invoice_number}
+                      onResizeStart={startResize('invoice_number')}
+                      resizing={resizingKey === 'invoice_number'}
+                    />
+                    <SortHeader
+                      label="Client"
+                      active={sortKey === 'client_name'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('client_name')}
+                      width={colWidths.client_name}
+                      onResizeStart={startResize('client_name')}
+                      resizing={resizingKey === 'client_name'}
+                    />
                     <SortHeader
                       label="Issue Date"
                       active={sortKey === 'issue_date'}
                       dir={sortDir}
                       onClick={() => toggleSort('issue_date')}
                       className="hidden md:table-cell"
+                      width={colWidths.issue_date}
+                      onResizeStart={startResize('issue_date')}
+                      resizing={resizingKey === 'issue_date'}
                     />
                     <SortHeader
                       label="Due Date"
@@ -366,6 +414,9 @@ export default function Invoices() {
                       dir={sortDir}
                       onClick={() => toggleSort('due_date')}
                       className="hidden lg:table-cell"
+                      width={colWidths.due_date}
+                      onResizeStart={startResize('due_date')}
+                      resizing={resizingKey === 'due_date'}
                     />
                     <SortHeader
                       label="Date Paid"
@@ -373,9 +424,29 @@ export default function Invoices() {
                       dir={sortDir}
                       onClick={() => toggleSort('date_paid')}
                       className="hidden lg:table-cell"
+                      width={colWidths.date_paid}
+                      onResizeStart={startResize('date_paid')}
+                      resizing={resizingKey === 'date_paid'}
                     />
-                    <SortHeader label="Status" active={sortKey === 'status'} dir={sortDir} onClick={() => toggleSort('status')} />
-                    <SortHeader label="Amount" active={sortKey === 'amount'} dir={sortDir} onClick={() => toggleSort('amount')} align="right" />
+                    <SortHeader
+                      label="Status"
+                      active={sortKey === 'status'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('status')}
+                      width={colWidths.status}
+                      onResizeStart={startResize('status')}
+                      resizing={resizingKey === 'status'}
+                    />
+                    <SortHeader
+                      label="Amount"
+                      active={sortKey === 'amount'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('amount')}
+                      align="right"
+                      width={colWidths.amount}
+                      onResizeStart={startResize('amount')}
+                      resizing={resizingKey === 'amount'}
+                    />
                     <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
                   </tr>
                 </thead>
