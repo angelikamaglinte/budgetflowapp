@@ -4,6 +4,9 @@ import { motion } from 'motion/react'
 import { FileText, Trash2, ExternalLink, ImageIcon, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { FileTypeBadge } from './FileTypeBadge'
 import { cn } from '@/lib/utils'
+import { useResizableColumns } from '@/hooks/useResizableColumns'
+import type { ColumnWidthDef } from '@/hooks/useResizableColumns'
+import { ColumnResizeHandle } from '@/components/ui/ColumnResizeHandle'
 import type { Receipt, Expense } from '@/types'
 
 function isImage(filename: string) {
@@ -19,21 +22,38 @@ const DEFAULT_DIR: Record<SortKey, SortDir> = {
   uploaded_at: 'desc',
 }
 
+// minWidth is set so each header's label + sort icon always fits on one
+// line, even at the floor.
+const COLUMN_DEFS: ColumnWidthDef[] = [
+  { key: 'filename', defaultWidth: 260, minWidth: 160 },
+  { key: 'category', defaultWidth: 140, minWidth: 110 },
+  { key: 'uploaded_at', defaultWidth: 140, minWidth: 120 },
+]
+
 function SortHeader({
   label,
   active,
   dir,
   onClick,
   className,
+  width,
+  onResizeStart,
+  resizing,
 }: {
   label: string
   active: boolean
   dir: SortDir
   onClick: () => void
   className?: string
+  width?: number
+  onResizeStart?: (e: React.MouseEvent) => void
+  resizing?: boolean
 }) {
   return (
-    <th className={cn('text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', className)}>
+    <th
+      style={width ? { width, minWidth: width } : undefined}
+      className={cn('relative text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4', className)}
+    >
       <button
         type="button"
         onClick={onClick}
@@ -46,6 +66,7 @@ function SortHeader({
           <ArrowUpDown className="w-3 h-3 opacity-40" />
         )}
       </button>
+      {onResizeStart && <ColumnResizeHandle onMouseDown={onResizeStart} active={!!resizing} />}
     </th>
   )
 }
@@ -72,6 +93,7 @@ interface FileListViewProps {
 export function FileListView({ files, expenses, onDelete, onLinkChange }: FileListViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>('uploaded_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const { widths: colWidths, resizingKey, startResize } = useResizableColumns('budgetflow:files:column-widths', COLUMN_DEFS)
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -146,14 +168,28 @@ export function FileListView({ files, expenses, onDelete, onLinkChange }: FileLi
                 dir={sortDir}
                 onClick={() => toggleSort('filename')}
                 className="px-6"
+                width={colWidths.filename}
+                onResizeStart={startResize('filename')}
+                resizing={resizingKey === 'filename'}
               />
-              <SortHeader label="Category" active={sortKey === 'category'} dir={sortDir} onClick={() => toggleSort('category')} />
+              <SortHeader
+                label="Category"
+                active={sortKey === 'category'}
+                dir={sortDir}
+                onClick={() => toggleSort('category')}
+                width={colWidths.category}
+                onResizeStart={startResize('category')}
+                resizing={resizingKey === 'category'}
+              />
               <SortHeader
                 label="Uploaded"
                 active={sortKey === 'uploaded_at'}
                 dir={sortDir}
                 onClick={() => toggleSort('uploaded_at')}
                 className="hidden md:table-cell"
+                width={colWidths.uploaded_at}
+                onResizeStart={startResize('uploaded_at')}
+                resizing={resizingKey === 'uploaded_at'}
               />
               <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-4 hidden lg:table-cell">Linked Expense</th>
               <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wider px-6 py-4">Actions</th>
@@ -171,7 +207,10 @@ export function FileListView({ files, expenses, onDelete, onLinkChange }: FileLi
                 <td className="px-6 py-3">
                   <div className="flex items-center gap-3">
                     <FileThumb file={file} />
-                    <p className="text-sm font-medium text-gray-900 truncate max-w-[220px]" title={file.filename}>
+                    {/* min-w-0 lets this shrink within the flex row so truncate can
+                        take effect — otherwise it grows to fit content regardless
+                        of the (resizable) column width. */}
+                    <p className="text-sm font-medium text-gray-900 truncate min-w-0 flex-1" title={file.filename}>
                       {file.filename}
                     </p>
                   </div>
