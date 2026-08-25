@@ -325,6 +325,7 @@ export interface Database {
           savings_rate: number
           gst_registered: boolean
           gst_rate: number | null
+          tuition_credit_remaining: number | null
           onboarding_completed: boolean
           updated_at: string
         }
@@ -339,6 +340,7 @@ export interface Database {
           savings_rate?: number
           gst_registered?: boolean
           gst_rate?: number | null
+          tuition_credit_remaining?: number | null
           onboarding_completed?: boolean
           updated_at?: string
         }
@@ -353,6 +355,7 @@ export interface Database {
           savings_rate?: number
           gst_registered?: boolean
           gst_rate?: number | null
+          tuition_credit_remaining?: number | null
           onboarding_completed?: boolean
           updated_at?: string
         }

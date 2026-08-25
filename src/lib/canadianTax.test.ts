@@ -4,6 +4,7 @@ import {
   computeIncomeTax,
   computeCPP,
   backOutTax,
+  applyTuitionCredit,
   computeAnnualNetIncome,
   computeTaxSummary,
   computeKeyDates,
@@ -214,6 +215,60 @@ describe('computeTaxSummary', () => {
   it('returns a zero effective rate for zero or negative income', () => {
     expect(computeTaxSummary(0, 'ON').effectiveRate).toBe(0)
     expect(computeTaxSummary(-500, 'ON').effectiveRate).toBe(0)
+  })
+
+  it('defaults to no tuition credit applied, matching prior behavior', () => {
+    const summary = computeTaxSummary(80000, 'ON')
+    expect(summary.tuitionCreditUsed).toBe(0)
+    expect(summary.remainingTuitionCredit).toBe(0)
+  })
+
+  it('reduces federal tax (only) when a tuition credit is available', () => {
+    const withoutTuition = computeTaxSummary(45000, 'AB')
+    const withTuition = computeTaxSummary(45000, 'AB', 50000)
+
+    expect(withTuition.federalTax).toBeLessThan(withoutTuition.federalTax)
+    expect(withTuition.provincialTax).toBeCloseTo(withoutTuition.provincialTax, 5)
+    expect(withTuition.cpp.total).toBeCloseTo(withoutTuition.cpp.total, 5)
+  })
+})
+
+describe('applyTuitionCredit', () => {
+  const lowestRate = 0.14
+
+  it('zeroes out tax when the credit pool more than covers it', () => {
+    const result = applyTuitionCredit(1000, 50000, lowestRate)
+    expect(result.tax).toBe(0)
+    expect(result.tuitionAmountUsed).toBeCloseTo(1000 / lowestRate, 5)
+    expect(result.remainingTuitionCredit).toBeCloseTo(50000 - 1000 / lowestRate, 5)
+  })
+
+  it('uses the entire pool and leaves remaining tax when the pool is insufficient', () => {
+    const result = applyTuitionCredit(10000, 1000, lowestRate)
+    expect(result.remainingTuitionCredit).toBeCloseTo(0, 5)
+    expect(result.tuitionAmountUsed).toBeCloseTo(1000, 5)
+    expect(result.tax).toBeCloseTo(10000 - 1000 * lowestRate, 5)
+  })
+
+  it('is a no-op when no credit is available', () => {
+    const result = applyTuitionCredit(1000, 0, lowestRate)
+    expect(result.tax).toBe(1000)
+    expect(result.tuitionAmountUsed).toBe(0)
+    expect(result.remainingTuitionCredit).toBe(0)
+  })
+
+  it('never applies more credit than needed, so it never produces a refund', () => {
+    const result = applyTuitionCredit(500, 100000, lowestRate)
+    expect(result.tax).toBe(0)
+    expect(result.tuitionAmountUsed).toBeCloseTo(500 / lowestRate, 5)
+    expect(result.remainingTuitionCredit).toBeGreaterThan(0)
+  })
+
+  it('is a no-op when there is no remaining tax to offset', () => {
+    const result = applyTuitionCredit(0, 50000, lowestRate)
+    expect(result.tax).toBe(0)
+    expect(result.tuitionAmountUsed).toBe(0)
+    expect(result.remainingTuitionCredit).toBe(50000)
   })
 })
 

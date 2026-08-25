@@ -262,6 +262,38 @@ export function computeAnnualNetIncome(invoices: Invoice[], expenses: Expense[],
   return { grossIncome, businessExpenses, netIncome: grossIncome - businessExpenses }
 }
 
+export interface TuitionCreditResult {
+  tax: number
+  tuitionAmountUsed: number // consumed from the pool, in credit-amount units (not dollar value)
+  remainingTuitionCredit: number
+}
+
+// Unused federal tuition credits carry forward indefinitely. CRA applies
+// only as much as needed to zero out the remaining tax — it never creates
+// a refund — and whatever's left over keeps carrying forward. This is a
+// federal-only concept: Alberta discontinued its own tuition credit in
+// 2020, so this is never applied to provincial tax.
+export function applyTuitionCredit(
+  taxAfterOtherCredits: number,
+  availableTuitionCredit: number,
+  lowestRate: number
+): TuitionCreditResult {
+  const tax = Math.max(0, taxAfterOtherCredits)
+  if (tax <= 0 || availableTuitionCredit <= 0) {
+    return { tax, tuitionAmountUsed: 0, remainingTuitionCredit: Math.max(0, availableTuitionCredit) }
+  }
+
+  const maxCreditValue = availableTuitionCredit * lowestRate
+  const creditValueUsed = Math.min(tax, maxCreditValue)
+  const tuitionAmountUsed = creditValueUsed / lowestRate
+
+  return {
+    tax: tax - creditValueUsed,
+    tuitionAmountUsed,
+    remainingTuitionCredit: availableTuitionCredit - tuitionAmountUsed,
+  }
+}
+
 export interface TaxSummary {
   netIncome: number
   federalTax: number
@@ -270,11 +302,19 @@ export interface TaxSummary {
   totalOwing: number
   afterTaxIncome: number
   effectiveRate: number
+  tuitionCreditUsed: number
+  remainingTuitionCredit: number
 }
 
-export function computeTaxSummary(netIncome: number, province: ProvinceCode | null): TaxSummary {
+export function computeTaxSummary(
+  netIncome: number,
+  province: ProvinceCode | null,
+  availableTuitionCredit: number = 0
+): TaxSummary {
   const income = Math.max(0, netIncome)
-  const federalTax = computeIncomeTax(income, FEDERAL_BPA_2026, FEDERAL_BRACKETS_2026)
+  const federalTaxBeforeTuition = computeIncomeTax(income, FEDERAL_BPA_2026, FEDERAL_BRACKETS_2026)
+  const tuitionResult = applyTuitionCredit(federalTaxBeforeTuition, availableTuitionCredit, FEDERAL_BRACKETS_2026[0].rate)
+  const federalTax = tuitionResult.tax
   const provinceInfo = province ? PROVINCE_TAX_2026[province] : null
   const provincialTax = provinceInfo ? computeIncomeTax(income, provinceInfo.bpa, provinceInfo.brackets) : 0
   const cpp = computeCPP(income)
@@ -288,6 +328,8 @@ export function computeTaxSummary(netIncome: number, province: ProvinceCode | nu
     totalOwing,
     afterTaxIncome: income - totalOwing,
     effectiveRate: income > 0 ? (totalOwing / income) * 100 : 0,
+    tuitionCreditUsed: tuitionResult.tuitionAmountUsed,
+    remainingTuitionCredit: tuitionResult.remainingTuitionCredit,
   }
 }
 

@@ -23,6 +23,7 @@ const settingsSchema = z.object({
   savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
   gst_registered: z.boolean().optional(),
   gst_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
+  tuition_credit_remaining: z.coerce.number().min(0, 'Must be 0 or more').optional(),
 })
 
 type SettingsFormValues = z.infer<typeof settingsSchema>
@@ -36,7 +37,18 @@ export default function Settings() {
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema) as Resolver<SettingsFormValues>,
-    defaultValues: { business_name: '', address: '', phone: '', email: '', province: '', tax_rate: 20, savings_rate: 10, gst_registered: false, gst_rate: '' as unknown as number },
+    defaultValues: {
+      business_name: '',
+      address: '',
+      phone: '',
+      email: '',
+      province: '',
+      tax_rate: 20,
+      savings_rate: 10,
+      gst_registered: false,
+      gst_rate: '' as unknown as number,
+      tuition_credit_remaining: '' as unknown as number,
+    },
   })
 
   const gstRegistered = useWatch({ control, name: 'gst_registered' })
@@ -53,6 +65,7 @@ export default function Settings() {
         savings_rate: profile?.savings_rate ?? 10,
         gst_registered: profile?.gst_registered ?? false,
         gst_rate: profile?.gst_rate ?? ('' as unknown as number),
+        tuition_credit_remaining: profile?.tuition_credit_remaining ?? ('' as unknown as number),
       })
     }
   }, [isLoading, profile, reset])
@@ -70,6 +83,7 @@ export default function Settings() {
       savings_rate: values.savings_rate,
       gst_registered: values.gst_registered ?? false,
       gst_rate: values.gst_registered ? (values.gst_rate ?? null) : null,
+      tuition_credit_remaining: values.tuition_credit_remaining ?? null,
       onboarding_completed: true,
     })
     await refreshAllocation()
@@ -157,6 +171,22 @@ export default function Settings() {
                 </div>
               )}
               {errors.gst_rate && <p className="mt-1 text-xs text-red-600">{errors.gst_rate.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Federal Tuition Credit Remaining ($)</label>
+              <input
+                {...register('tuition_credit_remaining')}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 31361"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                From "unused federal tuition, education, and textbook amounts" on your latest Notice of Assessment.
+                Update this once a year — the Tax tab doesn't track usage automatically.
+              </p>
+              {errors.tuition_credit_remaining && <p className="mt-1 text-xs text-red-600">{errors.tuition_credit_remaining.message}</p>}
             </div>
           </div>
         </div>

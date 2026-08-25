@@ -31,8 +31,13 @@ export default function Tax() {
 
   const province = (profile?.province as ProvinceCode | null) ?? null
 
+  const tuitionCreditAvailable = profile?.tuition_credit_remaining ?? 0
+
   const income = useMemo(() => computeAnnualNetIncome(invoices, expenses, year), [invoices, expenses, year])
-  const summary = useMemo(() => computeTaxSummary(income.netIncome, province), [income.netIncome, province])
+  const summary = useMemo(
+    () => computeTaxSummary(income.netIncome, province, tuitionCreditAvailable),
+    [income.netIncome, province, tuitionCreditAvailable]
+  )
   const keyDates = useMemo(() => computeKeyDates(year, summary.totalOwing), [year, summary.totalOwing])
 
   function handleProvinceChange(value: string) {
@@ -144,11 +149,20 @@ export default function Tax() {
             />
           </div>
 
-          <p className="text-xs text-gray-400 mt-4 mb-6">
+          <p className="text-xs text-gray-400 mt-4">
             CPP breakdown: {formatMoney(summary.cpp.base)} base contribution
             {summary.cpp.cpp2 > 0 && ` + ${formatMoney(summary.cpp.cpp2)} CPP2`} — self-employed contributors pay
             both the employee and employer portions.
           </p>
+
+          {tuitionCreditAvailable > 0 && (
+            <p className="text-xs text-gray-400 mt-1 mb-6">
+              Tuition credit applied: {formatMoney(summary.tuitionCreditUsed)} of {formatMoney(tuitionCreditAvailable)}{' '}
+              available — ~{formatMoney(summary.remainingTuitionCredit)} would remain for next year. Update this
+              from your next Notice of Assessment in Settings — this app doesn't track usage automatically.
+            </p>
+          )}
+          {tuitionCreditAvailable <= 0 && <div className="mb-6" />}
 
           <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
             <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Key Dates</h2>
