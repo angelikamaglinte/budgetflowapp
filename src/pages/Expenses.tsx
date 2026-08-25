@@ -27,6 +27,7 @@ import {
   useBulkAddExpenses,
   useBulkUpdateExpenses,
 } from '@/hooks/useExpenses'
+import { useBusinessProfile } from '@/hooks/useBusinessProfile'
 import { useAuth } from '@/contexts/AuthContext'
 import { exportExpenses } from '@/lib/export'
 import { EXPENSE_CATEGORIES, EXPENSE_TYPE_COLORS } from '@/types'
@@ -45,6 +46,8 @@ const TABS: { id: TabType; label: string; icon: React.ReactNode }[] = [
 export default function Expenses() {
   const { user } = useAuth()
   const { data: expenses = [], isLoading } = useExpenses()
+  const { data: profile } = useBusinessProfile()
+  const defaultGstRate = profile?.gst_registered ? profile.gst_rate ?? undefined : undefined
   const addExpense = useAddExpense()
   const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
@@ -355,8 +358,9 @@ export default function Expenses() {
                         {exp.vendor ? ` · ${exp.vendor}` : ''}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 shrink-0">
+                    <span className="text-sm font-semibold text-gray-900 shrink-0 text-right">
                       ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {exp.tax_rate != null && <span className="block text-xs font-normal text-gray-400">+GST</span>}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -465,6 +469,7 @@ export default function Expenses() {
                         <span className="text-sm font-semibold text-gray-900">
                           ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
+                        {exp.tax_rate != null && <p className="text-xs text-gray-400">+GST</p>}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -497,6 +502,7 @@ export default function Expenses() {
         onClose={() => { setFormOpen(false); setEditTarget(null) }}
         onSubmit={handleSubmit}
         initial={editTarget ?? undefined}
+        defaultGstRate={defaultGstRate}
       />
 
       {/* Import from CSV */}

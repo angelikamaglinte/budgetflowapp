@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { format } from 'date-fns'
-import { ChevronLeft, ChevronRight, TrendingUp, Landmark, MapPin, ShieldCheck, Receipt, Wallet, AlertCircle, CalendarClock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, Landmark, MapPin, ShieldCheck, Receipt, Wallet, AlertCircle, CalendarClock, ArrowLeftRight } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
 import { useAuth } from '@/contexts/AuthContext'
-import { computeAnnualNetIncome, computeTaxSummary, computeKeyDates, daysUntil, PROVINCE_LABELS } from '@/lib/canadianTax'
+import { computeAnnualNetIncome, computeGstSummary, computeTaxSummary, computeKeyDates, daysUntil, PROVINCE_LABELS } from '@/lib/canadianTax'
 import type { ProvinceCode } from '@/lib/canadianTax'
 import { formatMoney } from '@/lib/savingsCalculator'
 
@@ -39,6 +39,7 @@ export default function Tax() {
     [income.netIncome, province, tuitionCreditAvailable]
   )
   const keyDates = useMemo(() => computeKeyDates(year, summary.totalOwing), [year, summary.totalOwing])
+  const gstSummary = useMemo(() => computeGstSummary(invoices, expenses, year), [invoices, expenses, year])
 
   function handleProvinceChange(value: string) {
     if (!user) return
@@ -193,6 +194,36 @@ export default function Tax() {
               </p>
             )}
           </div>
+
+          {profile?.gst_registered && (
+            <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5 mt-6">
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">GST/HST Remittance</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="flex items-center gap-3 p-3 bg-[#F9F2F5] rounded-xl">
+                  <ArrowLeftRight className="w-4 h-4 text-[#B35488] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">Collected from clients</p>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 shrink-0">{formatMoney(gstSummary.collected)}</p>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-[#EEF3ED] rounded-xl">
+                  <ArrowLeftRight className="w-4 h-4 text-[#548164] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">Paid on purchases (ITCs)</p>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 shrink-0">{formatMoney(gstSummary.paid)}</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700">
+                {gstSummary.netOwing >= 0
+                  ? <>You'd owe the CRA <span className="font-semibold text-gray-900">{formatMoney(gstSummary.netOwing)}</span> for this year's GST/HST.</>
+                  : <>The CRA would owe you <span className="font-semibold text-gray-900">{formatMoney(-gstSummary.netOwing)}</span> for this year's GST/HST.</>}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                An estimate from your recorded invoices and business expenses — not a filed GST/HST return.
+              </p>
+            </div>
+          )}
         </>
       )}
     </AppLayout>

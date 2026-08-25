@@ -18,6 +18,7 @@ function makeExpense(overrides: Partial<Expense>): Expense {
     amount: 100,
     notes: null,
     receipt_url: null,
+    tax_rate: null,
     created_at: '2026-07-01T00:00:00Z',
     ...overrides,
   }
