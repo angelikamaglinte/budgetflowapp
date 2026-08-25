@@ -233,6 +233,18 @@ export function backOutTax(amountIncludingTax: number, taxRate: number): { subto
   return { subtotal, taxAmount: amountIncludingTax - subtotal }
 }
 
+const MEALS_ENTERTAINMENT_CATEGORY = 'Meals & Entertainment'
+const MEALS_ENTERTAINMENT_DEDUCTION_RATE = 0.5
+
+// CRA limits meals & entertainment with a business purpose to 50%
+// deductibility (Income Tax Act s. 67.1), even with a legitimate business
+// reason — every other expense category is fully deductible.
+export function computeDeductibleAmount(expense: Pick<Expense, 'category' | 'amount'>): number {
+  return expense.category === MEALS_ENTERTAINMENT_CATEGORY
+    ? expense.amount * MEALS_ENTERTAINMENT_DEDUCTION_RATE
+    : expense.amount
+}
+
 export interface AnnualIncomeSummary {
   grossIncome: number
   businessExpenses: number
@@ -241,7 +253,8 @@ export interface AnnualIncomeSummary {
 
 // Gross income = paid invoices by date_paid year, GST/HST backed out where
 // an invoice has a tax_rate; deductible expenses = business-type only
-// (personal expenses aren't deductible) — same convention as
+// (personal expenses aren't deductible), with Meals & Entertainment capped
+// at 50% per computeDeductibleAmount — same convention as
 // computeQuarterlyTaxSummary in reports.ts, but for a full year rather
 // than quarterly buckets.
 export function computeAnnualNetIncome(invoices: Invoice[], expenses: Expense[], year: number): AnnualIncomeSummary {
@@ -256,7 +269,7 @@ export function computeAnnualNetIncome(invoices: Invoice[], expenses: Expense[],
   for (const exp of expenses) {
     if (exp.type !== 'business') continue
     if (parseLocalDate(exp.date).getFullYear() !== year) continue
-    businessExpenses += exp.amount
+    businessExpenses += computeDeductibleAmount(exp)
   }
 
   return { grossIncome, businessExpenses, netIncome: grossIncome - businessExpenses }

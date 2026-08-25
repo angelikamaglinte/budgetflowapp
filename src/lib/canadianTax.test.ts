@@ -5,6 +5,7 @@ import {
   computeCPP,
   backOutTax,
   applyTuitionCredit,
+  computeDeductibleAmount,
   computeAnnualNetIncome,
   computeTaxSummary,
   computeKeyDates,
@@ -176,6 +177,18 @@ describe('computeAnnualNetIncome', () => {
 
     expect(result.grossIncome).toBeCloseTo(2000, 5)
   })
+
+  it('caps Meals & Entertainment expenses at 50% deductible, unlike other categories', () => {
+    const expenses = [
+      makeExpense({ id: 'e1', amount: 200, category: 'Meals & Entertainment', date: '2026-04-01' }),
+      makeExpense({ id: 'e2', amount: 100, category: 'Software', date: '2026-04-01' }),
+    ]
+
+    const result = computeAnnualNetIncome([], expenses, 2026)
+
+    // 200 * 50% + 100 * 100% = 200
+    expect(result.businessExpenses).toBe(200)
+  })
 })
 
 describe('backOutTax', () => {
@@ -189,6 +202,17 @@ describe('backOutTax', () => {
     const { subtotal, taxAmount } = backOutTax(500, 0)
     expect(subtotal).toBe(500)
     expect(taxAmount).toBe(0)
+  })
+})
+
+describe('computeDeductibleAmount', () => {
+  it('deducts only 50% of a Meals & Entertainment expense', () => {
+    expect(computeDeductibleAmount({ category: 'Meals & Entertainment', amount: 200 })).toBe(100)
+  })
+
+  it('deducts the full amount for every other category', () => {
+    expect(computeDeductibleAmount({ category: 'Software', amount: 200 })).toBe(200)
+    expect(computeDeductibleAmount({ category: 'Office', amount: 50 })).toBe(50)
   })
 })
 
