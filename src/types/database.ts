@@ -63,6 +63,7 @@ export interface Database {
           due_date: string | null
           date_paid: string | null
           notes: string | null
+          tax_rate: number | null
           created_at: string
         }
         Insert: {
@@ -77,6 +78,7 @@ export interface Database {
           due_date?: string | null
           date_paid?: string | null
           notes?: string | null
+          tax_rate?: number | null
           created_at?: string
         }
         Update: {
@@ -91,6 +93,7 @@ export interface Database {
           due_date?: string | null
           date_paid?: string | null
           notes?: string | null
+          tax_rate?: number | null
           created_at?: string
         }
       }
@@ -317,8 +320,12 @@ export interface Database {
           address: string | null
           phone: string | null
           email: string | null
+          province: string | null
           tax_rate: number
           savings_rate: number
+          gst_registered: boolean
+          gst_rate: number | null
+          tuition_credit_remaining: number | null
           onboarding_completed: boolean
           updated_at: string
         }
@@ -328,8 +335,12 @@ export interface Database {
           address?: string | null
           phone?: string | null
           email?: string | null
+          province?: string | null
           tax_rate?: number
           savings_rate?: number
+          gst_registered?: boolean
+          gst_rate?: number | null
+          tuition_credit_remaining?: number | null
           onboarding_completed?: boolean
           updated_at?: string
         }
@@ -339,8 +350,12 @@ export interface Database {
           address?: string | null
           phone?: string | null
           email?: string | null
+          province?: string | null
           tax_rate?: number
           savings_rate?: number
+          gst_registered?: boolean
+          gst_rate?: number | null
+          tuition_credit_remaining?: number | null
           onboarding_completed?: boolean
           updated_at?: string
         }

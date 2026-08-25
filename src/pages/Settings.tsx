@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -10,14 +10,20 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAllocation } from '@/contexts/AllocationContext'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
+import { PROVINCE_LABELS } from '@/lib/canadianTax'
+import type { ProvinceCode } from '@/lib/canadianTax'
 
 const settingsSchema = z.object({
   business_name: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
+  province: z.string().optional(),
   tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
   savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
+  gst_registered: z.boolean().optional(),
+  gst_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
+  tuition_credit_remaining: z.coerce.number().min(0, 'Must be 0 or more').optional(),
 })
 
 type SettingsFormValues = z.infer<typeof settingsSchema>
@@ -29,10 +35,23 @@ export default function Settings() {
   const saveProfile = useSaveBusinessProfile()
   const [saved, setSaved] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema) as Resolver<SettingsFormValues>,
-    defaultValues: { business_name: '', address: '', phone: '', email: '', tax_rate: 20, savings_rate: 10 },
+    defaultValues: {
+      business_name: '',
+      address: '',
+      phone: '',
+      email: '',
+      province: '',
+      tax_rate: 20,
+      savings_rate: 10,
+      gst_registered: false,
+      gst_rate: '' as unknown as number,
+      tuition_credit_remaining: '' as unknown as number,
+    },
   })
+
+  const gstRegistered = useWatch({ control, name: 'gst_registered' })
 
   useEffect(() => {
     if (!isLoading) {
@@ -41,8 +60,12 @@ export default function Settings() {
         address: profile?.address ?? '',
         phone: profile?.phone ?? '',
         email: profile?.email ?? '',
+        province: profile?.province ?? '',
         tax_rate: profile?.tax_rate ?? 20,
         savings_rate: profile?.savings_rate ?? 10,
+        gst_registered: profile?.gst_registered ?? false,
+        gst_rate: profile?.gst_rate ?? ('' as unknown as number),
+        tuition_credit_remaining: profile?.tuition_credit_remaining ?? ('' as unknown as number),
       })
     }
   }, [isLoading, profile, reset])
@@ -55,8 +78,12 @@ export default function Settings() {
       address: values.address || null,
       phone: values.phone || null,
       email: values.email || null,
+      province: values.province || null,
       tax_rate: values.tax_rate,
       savings_rate: values.savings_rate,
+      gst_registered: values.gst_registered ?? false,
+      gst_rate: values.gst_registered ? (values.gst_rate ?? null) : null,
+      tuition_credit_remaining: values.tuition_credit_remaining ?? null,
       onboarding_completed: true,
     })
     await refreshAllocation()
@@ -106,6 +133,60 @@ export default function Settings() {
                 />
                 {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Province</label>
+              <select
+                {...register('province')}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Select province</option>
+                {(Object.keys(PROVINCE_LABELS) as ProvinceCode[]).map((code) => (
+                  <option key={code} value={code}>{PROVINCE_LABELS[code]}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-400">Used for provincial income tax on the Tax tab.</p>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 w-fit cursor-pointer">
+                <input
+                  {...register('gst_registered')}
+                  type="checkbox"
+                  className="w-4 h-4 accent-primary-600 cursor-pointer"
+                />
+                I'm registered for GST/HST
+              </label>
+              {gstRegistered && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    {...register('gst_rate')}
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    placeholder="e.g. 5"
+                    className="w-24 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-500">% default rate for new invoices</span>
+                </div>
+              )}
+              {errors.gst_rate && <p className="mt-1 text-xs text-red-600">{errors.gst_rate.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Federal Tuition Credit Remaining ($)</label>
+              <input
+                {...register('tuition_credit_remaining')}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 31361"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                From "unused federal tuition, education, and textbook amounts" on your latest Notice of Assessment.
+                Update this once a year — the Tax tab doesn't track usage automatically.
+              </p>
+              {errors.tuition_credit_remaining && <p className="mt-1 text-xs text-red-600">{errors.tuition_credit_remaining.message}</p>}
             </div>
           </div>
         </div>

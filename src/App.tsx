@@ -13,6 +13,7 @@ import Expenses from '@/pages/Expenses'
 import Invoices from '@/pages/Invoices'
 import Reports from '@/pages/Reports'
 import Calculator from '@/pages/Calculator'
+import Tax from '@/pages/Tax'
 import Calendar from '@/pages/Calendar'
 import Tools from '@/pages/Tools'
 import Contacts from '@/pages/Contacts'
@@ -85,6 +86,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Calculator />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tax"
+              element={
+                <ProtectedRoute>
+                  <Tax />
                 </ProtectedRoute>
               }
             />
