@@ -238,11 +238,15 @@ const MEALS_ENTERTAINMENT_DEDUCTION_RATE = 0.5
 
 // CRA limits meals & entertainment with a business purpose to 50%
 // deductibility (Income Tax Act s. 67.1), even with a legitimate business
-// reason — every other expense category is fully deductible.
-export function computeDeductibleAmount(expense: Pick<Expense, 'category' | 'amount'>): number {
+// reason — every other expense category is fully deductible. GST/HST paid
+// (tracked via tax_rate, claimable back as an Input Tax Credit) is backed
+// out first — it isn't a real business cost, so it shouldn't inflate the
+// deduction on top of being claimed back separately.
+export function computeDeductibleAmount(expense: Pick<Expense, 'category' | 'amount' | 'tax_rate'>): number {
+  const preTaxAmount = expense.tax_rate ? backOutTax(expense.amount, expense.tax_rate).subtotal : expense.amount
   return expense.category === MEALS_ENTERTAINMENT_CATEGORY
-    ? expense.amount * MEALS_ENTERTAINMENT_DEDUCTION_RATE
-    : expense.amount
+    ? preTaxAmount * MEALS_ENTERTAINMENT_DEDUCTION_RATE
+    : preTaxAmount
 }
 
 export interface AnnualIncomeSummary {
@@ -273,6 +277,33 @@ export function computeAnnualNetIncome(invoices: Invoice[], expenses: Expense[],
   }
 
   return { grossIncome, businessExpenses, netIncome: grossIncome - businessExpenses }
+}
+
+export interface GstSummary {
+  collected: number // GST/HST portion of paid invoices with a tax_rate
+  paid: number // GST/HST portion of business expenses with a tax_rate — the ITCs
+  netOwing: number // collected - paid; positive = owe the CRA, negative = the CRA owes you
+}
+
+// The other half of the GST/HST picture: what you'd actually remit (or get
+// back) for the year, separate from income tax. Same year/status/type
+// filtering conventions as computeAnnualNetIncome above.
+export function computeGstSummary(invoices: Invoice[], expenses: Expense[], year: number): GstSummary {
+  let collected = 0
+  for (const inv of invoices) {
+    if (inv.status !== 'paid' || !inv.date_paid) continue
+    if (parseLocalDate(inv.date_paid).getFullYear() !== year) continue
+    if (inv.tax_rate) collected += backOutTax(inv.amount, inv.tax_rate).taxAmount
+  }
+
+  let paid = 0
+  for (const exp of expenses) {
+    if (exp.type !== 'business') continue
+    if (parseLocalDate(exp.date).getFullYear() !== year) continue
+    if (exp.tax_rate) paid += backOutTax(exp.amount, exp.tax_rate).taxAmount
+  }
+
+  return { collected, paid, netOwing: collected - paid }
 }
 
 export interface TuitionCreditResult {

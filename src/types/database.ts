@@ -21,6 +21,7 @@ export interface Database {
           amount: number
           notes: string | null
           receipt_url: string | null
+          tax_rate: number | null
           created_at: string
         }
         Insert: {
@@ -34,6 +35,7 @@ export interface Database {
           amount: number
           notes?: string | null
           receipt_url?: string | null
+          tax_rate?: number | null
           created_at?: string
         }
         Update: {
@@ -47,6 +49,7 @@ export interface Database {
           amount?: number
           notes?: string | null
           receipt_url?: string | null
+          tax_rate?: number | null
           created_at?: string
         }
       }

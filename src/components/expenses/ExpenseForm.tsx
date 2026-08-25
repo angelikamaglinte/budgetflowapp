@@ -17,6 +17,7 @@ const expenseSchema = z.object({
   type: z.enum(['business', 'personal']),
   amount: z.coerce.number().positive('Amount must be positive'),
   notes: z.string().optional(),
+  tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
 })
 
 export type ExpenseFormValues = z.infer<typeof expenseSchema>
@@ -26,9 +27,10 @@ interface ExpenseFormProps {
   onClose: () => void
   onSubmit: (values: ExpenseFormValues) => Promise<void>
   initial?: Expense
+  defaultGstRate?: number
 }
 
-export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormProps) {
+export function ExpenseForm({ open, onClose, onSubmit, initial, defaultGstRate }: ExpenseFormProps) {
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } =
     useForm<ExpenseFormValues>({
       resolver: zodResolver(expenseSchema) as Resolver<ExpenseFormValues>,
@@ -40,6 +42,7 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
         type: (initial?.type as 'business' | 'personal') ?? 'business',
         amount: initial?.amount ?? ('' as unknown as number),
         notes: initial?.notes ?? '',
+        tax_rate: defaultGstRate ?? ('' as unknown as number),
       },
     })
 
@@ -55,9 +58,10 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
         type: (initial?.type as 'business' | 'personal') ?? 'business',
         amount: initial?.amount ?? ('' as unknown as number),
         notes: initial?.notes ?? '',
+        tax_rate: initial ? (initial.tax_rate ?? ('' as unknown as number)) : (defaultGstRate ?? ('' as unknown as number)),
       })
     }
-  }, [open, initial, reset])
+  }, [open, initial, defaultGstRate, reset])
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -127,6 +131,22 @@ export function ExpenseForm({ open, onClose, onSubmit, initial }: ExpenseFormPro
               />
               {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="expense-tax-rate" className="block text-sm font-medium text-gray-700 mb-1.5">GST/HST Rate (%, optional)</label>
+            <input
+              {...register('tax_rate')}
+              id="expense-tax-rate"
+              type="number"
+              step="0.01"
+              placeholder="e.g. 5"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              If you paid GST/HST on this purchase, set the rate so you can claim it back as an Input Tax Credit.
+            </p>
+            {errors.tax_rate && <p className="mt-1 text-xs text-red-600">{errors.tax_rate.message}</p>}
           </div>
 
           <div>

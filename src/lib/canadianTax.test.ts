@@ -7,6 +7,7 @@ import {
   applyTuitionCredit,
   computeDeductibleAmount,
   computeAnnualNetIncome,
+  computeGstSummary,
   computeTaxSummary,
   computeKeyDates,
   daysUntil,
@@ -48,6 +49,7 @@ function makeExpense(overrides: Partial<Expense>): Expense {
     amount: 100,
     notes: null,
     receipt_url: null,
+    tax_rate: null,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   }
@@ -207,12 +209,77 @@ describe('backOutTax', () => {
 
 describe('computeDeductibleAmount', () => {
   it('deducts only 50% of a Meals & Entertainment expense', () => {
-    expect(computeDeductibleAmount({ category: 'Meals & Entertainment', amount: 200 })).toBe(100)
+    expect(computeDeductibleAmount({ category: 'Meals & Entertainment', amount: 200, tax_rate: null })).toBe(100)
   })
 
   it('deducts the full amount for every other category', () => {
-    expect(computeDeductibleAmount({ category: 'Software', amount: 200 })).toBe(200)
-    expect(computeDeductibleAmount({ category: 'Office', amount: 50 })).toBe(50)
+    expect(computeDeductibleAmount({ category: 'Software', amount: 200, tax_rate: null })).toBe(200)
+    expect(computeDeductibleAmount({ category: 'Office', amount: 50, tax_rate: null })).toBe(50)
+  })
+
+  it('backs out GST/HST before deducting, for a plain category', () => {
+    // $105 including 5% GST -> $100 pre-tax, fully deductible
+    expect(computeDeductibleAmount({ category: 'Software', amount: 105, tax_rate: 5 })).toBeCloseTo(100, 5)
+  })
+
+  it('backs out GST/HST before applying the Meals & Entertainment 50% cut, not after', () => {
+    // $105 including 5% GST -> $100 pre-tax -> 50% deductible = $50.
+    // Applying the cut first (105 * 0.5 = 52.5) would give a different, wrong answer.
+    const result = computeDeductibleAmount({ category: 'Meals & Entertainment', amount: 105, tax_rate: 5 })
+    expect(result).toBeCloseTo(50, 5)
+    expect(result).not.toBeCloseTo(52.5, 1)
+  })
+})
+
+describe('computeGstSummary', () => {
+  it('sums GST collected from paid, GST-tracked invoices in the given year', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1050, tax_rate: 5, status: 'paid', date_paid: '2026-03-01' }), // $50 GST
+      makeInvoice({ id: 'i2', amount: 2000, tax_rate: null, status: 'paid', date_paid: '2026-03-01' }), // untracked
+      makeInvoice({ id: 'i3', amount: 1050, tax_rate: 5, status: 'pending', date_paid: null }), // not paid
+      makeInvoice({ id: 'i4', amount: 1050, tax_rate: 5, status: 'paid', date_paid: '2025-03-01' }), // wrong year
+    ]
+
+    const result = computeGstSummary(invoices, [], 2026)
+
+    expect(result.collected).toBeCloseTo(50, 5)
+  })
+
+  it('sums GST paid (ITCs) only from GST-tracked business expenses in the given year', () => {
+    const expenses = [
+      makeExpense({ id: 'e1', amount: 105, tax_rate: 5, type: 'business', date: '2026-04-01' }), // $5 ITC
+      makeExpense({ id: 'e2', amount: 105, tax_rate: 5, type: 'personal', date: '2026-04-01' }), // not deductible
+      makeExpense({ id: 'e3', amount: 105, tax_rate: null, type: 'business', date: '2026-04-01' }), // untracked
+    ]
+
+    const result = computeGstSummary([], expenses, 2026)
+
+    expect(result.paid).toBeCloseTo(5, 5)
+  })
+
+  it('nets collected minus paid, positive when owing the CRA', () => {
+    const invoices = [makeInvoice({ amount: 1050, tax_rate: 5, status: 'paid', date_paid: '2026-01-01' })] // $50 collected
+    const expenses = [makeExpense({ amount: 210, tax_rate: 5, type: 'business', date: '2026-01-01' })] // $10 paid
+
+    const result = computeGstSummary(invoices, expenses, 2026)
+
+    expect(result.netOwing).toBeCloseTo(40, 5)
+  })
+
+  it('nets negative when ITCs exceed what was collected — the CRA owes you', () => {
+    const invoices = [makeInvoice({ amount: 105, tax_rate: 5, status: 'paid', date_paid: '2026-01-01' })] // $5 collected
+    const expenses = [makeExpense({ amount: 2100, tax_rate: 5, type: 'business', date: '2026-01-01' })] // $100 paid
+
+    const result = computeGstSummary(invoices, expenses, 2026)
+
+    expect(result.netOwing).toBeCloseTo(-95, 5)
+  })
+
+  it('returns all zeros when nothing is GST-tracked', () => {
+    const invoices = [makeInvoice({ tax_rate: null })]
+    const expenses = [makeExpense({ tax_rate: null })]
+
+    expect(computeGstSummary(invoices, expenses, 2026)).toEqual({ collected: 0, paid: 0, netOwing: 0 })
   })
 })
 
