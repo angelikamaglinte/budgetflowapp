@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DollarSign, TrendingUp, TrendingDown, Clock, PiggyBank, ShieldCheck } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { SpendingChart } from '@/components/dashboard/SpendingChart'
@@ -11,18 +11,19 @@ import { InvoiceReminderBanners } from '@/components/dashboard/InvoiceReminderBa
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useInvoiceReminders, useDismissInvoiceReminder } from '@/hooks/useInvoiceReminders'
+import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
-import { useAllocation } from '@/contexts/AllocationContext'
 import { getDueReminders } from '@/lib/reminders'
+import { computeBucketSplit, getBucketStyle } from '@/lib/payoutBuckets'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
   const { data: reminders = [] } = useInvoiceReminders()
+  const { data: buckets = [] } = usePayoutBuckets()
   const dismissReminder = useDismissInvoiceReminder()
   const { periodFilter } = usePeriod()
-  const { taxRate, savingsRate } = useAllocation()
 
   const dueReminders = useMemo(() => getDueReminders(reminders), [reminders])
 
@@ -38,11 +39,11 @@ export default function Dashboard() {
       .filter((inv) => inv.status === 'pending')
       .reduce((sum, inv) => sum + inv.amount, 0)
     const netProfit = totalIncome - totalExpenses
-    const taxReserve = totalIncome * (taxRate / 100)
-    const savings = totalIncome * (savingsRate / 100)
 
-    return { totalExpenses, totalIncome, pending, netProfit, taxReserve, savings }
-  }, [expenses, invoices, periodFilter, taxRate, savingsRate])
+    return { totalExpenses, totalIncome, pending, netProfit }
+  }, [expenses, invoices, periodFilter])
+
+  const bucketSplit = useMemo(() => computeBucketSplit(stats.totalIncome, buckets), [stats.totalIncome, buckets])
 
   const subtitle = periodFilter
     ? `Financial overview for ${periodLabel(periodFilter)}`
@@ -100,21 +101,21 @@ export default function Dashboard() {
           icon={<Clock className="w-5 h-5 text-[#C29343]" />}
           iconBg="bg-[#FAF3DD]"
         />
-        <StatCard
-          label={`Tax Reserve (${taxRate}%)`}
-          value={stats.taxReserve}
-          delay={0.2}
-          glow
-          icon={<ShieldCheck className="w-5 h-5 text-primary-600" />}
-          iconBg="bg-accent-100"
-        />
-        <StatCard
-          label={`Savings (${savingsRate}%)`}
-          value={stats.savings}
-          delay={0.25}
-          icon={<PiggyBank className="w-5 h-5 text-[#487CA5]" />}
-          iconBg="bg-[#E9F3F7]"
-        />
+        {bucketSplit.map(({ bucket, amount }, i) => {
+          const style = getBucketStyle(i)
+          const Icon = style.icon
+          return (
+            <StatCard
+              key={bucket.id}
+              label={bucket.percentage != null ? `${bucket.name} (${bucket.percentage}%)` : bucket.name}
+              value={amount}
+              delay={0.2 + i * 0.05}
+              glow={i === 0}
+              icon={<Icon className={`w-5 h-5 ${style.iconColor}`} />}
+              iconBg={style.iconBg}
+            />
+          )
+        })}
       </div>
 
       {/* Charts row 1 */}

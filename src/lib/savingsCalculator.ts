@@ -68,17 +68,16 @@ export interface PurchaseProgress {
 }
 
 // Assumes the plan's full price is funded by dedicating the entire average
-// monthly leftover (income minus expenses minus tax reserve minus savings)
-// to it — not divided across other saved plans.
+// monthly leftover (income minus expenses minus everything reserved across
+// payout buckets) to it — not divided across other saved plans.
 export function computePurchaseProgress(
   plan: Pick<PurchasePlan, 'price' | 'target_date'>,
   averages: MonthlyAverages,
-  taxRate: number,
-  savingsRate: number,
+  reservedRate: number,
   today: Date = new Date()
 ): PurchaseProgress {
   const avgMonthlyLeftover =
-    averages.avgMonthlyIncome * (1 - (taxRate + savingsRate) / 100) - averages.avgMonthlyExpenses
+    averages.avgMonthlyIncome * (1 - reservedRate / 100) - averages.avgMonthlyExpenses
 
   let monthsUntilTarget: number | null = null
   let requiredMonthlyExtra: number | null = null

@@ -7,8 +7,8 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'motion/react'
 import { TrendingUp } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAllocation } from '@/contexts/AllocationContext'
 import { useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
+import { useAddBucket } from '@/hooks/usePayoutBuckets'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { PROVINCE_LABELS } from '@/lib/canadianTax'
 import type { ProvinceCode } from '@/lib/canadianTax'
@@ -30,8 +30,8 @@ const STEPS = ['Business Info', 'Allocation Rates'] as const
 export default function Onboarding() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { refresh: refreshAllocation } = useAllocation()
   const saveProfile = useSaveBusinessProfile()
+  const addBucket = useAddBucket()
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
 
@@ -54,7 +54,11 @@ export default function Onboarding() {
         savings_rate: values.savings_rate,
         onboarding_completed: true,
       })
-      await refreshAllocation()
+      // Seeds a working payout split so new users land on the Dashboard
+      // with something already set up — full editing lives in Settings.
+      await addBucket.mutateAsync({ name: 'Tax Reserve', percentage: values.tax_rate, sort_order: 0 })
+      await addBucket.mutateAsync({ name: 'Savings', percentage: values.savings_rate, sort_order: 1 })
+      await addBucket.mutateAsync({ name: 'Owner Pay', percentage: null, sort_order: 2 })
       void navigate('/dashboard')
     } finally {
       setSaving(false)

@@ -11,14 +11,14 @@ function formatMoney(n: number) {
 interface QuarterlyTaxSectionProps {
   invoices: Invoice[]
   expenses: Expense[]
-  taxRate: number
+  reservedRate: number
 }
 
-export function QuarterlyTaxSection({ invoices, expenses, taxRate }: QuarterlyTaxSectionProps) {
+export function QuarterlyTaxSection({ invoices, expenses, reservedRate }: QuarterlyTaxSectionProps) {
   const [year, setYear] = useState(() => new Date().getFullYear())
   const quarters = useMemo(
-    () => computeQuarterlyTaxSummary(invoices, expenses, taxRate, year),
-    [invoices, expenses, taxRate, year]
+    () => computeQuarterlyTaxSummary(invoices, expenses, reservedRate, year),
+    [invoices, expenses, reservedRate, year]
   )
 
   const yearTotals = quarters.reduce(
@@ -51,7 +51,7 @@ export function QuarterlyTaxSection({ invoices, expenses, taxRate }: QuarterlyTa
         </div>
       </div>
       <p className="text-sm text-gray-500 mb-4">
-        Income received and tax reserve accumulated per quarter, at your {taxRate}% rate — a starting point for
+        Income received and tax reserve accumulated per quarter, at your {reservedRate}% reserved rate across your payout buckets — a starting point for
         estimated tax payments, not tax advice.
       </p>
 

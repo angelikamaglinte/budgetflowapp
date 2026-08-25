@@ -16,8 +16,8 @@ import type { ColumnWidthDef } from '@/hooks/useResizableColumns'
 import { ColumnResizeHandle } from '@/components/ui/ColumnResizeHandle'
 import { useAddNotification } from '@/hooks/useNotifications'
 import { useBusinessProfile } from '@/hooks/useBusinessProfile'
+import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAllocation } from '@/contexts/AllocationContext'
 import { exportInvoices } from '@/lib/export'
 import { getEffectiveStatus } from '@/lib/invoiceStatus'
 import type { Invoice } from '@/types'
@@ -100,9 +100,9 @@ function SortHeader({
 
 export default function Invoices() {
   const { user } = useAuth()
-  const { taxRate, savingsRate } = useAllocation()
   const { data: invoices = [], isLoading } = useInvoices()
   const { data: profile } = useBusinessProfile()
+  const { data: buckets = [] } = usePayoutBuckets()
   const defaultGstRate = profile?.gst_registered ? profile.gst_rate ?? undefined : undefined
 
   const nextInvoiceNumber = useMemo(() => {
@@ -216,11 +216,9 @@ export default function Invoices() {
       date_paid: new Date().toISOString().split('T')[0],
     })
     setTransferChecklistInvoice(inv)
-    const taxAmount = inv.amount * (taxRate / 100)
-    const savingsAmount = inv.amount * (savingsRate / 100)
     void addNotification.mutateAsync({
       user_id: user!.id,
-      message: `Invoice ${inv.invoice_number} marked paid — move $${taxAmount.toFixed(2)} to tax, $${savingsAmount.toFixed(2)} to savings.`,
+      message: `Invoice ${inv.invoice_number} marked paid — see your payout breakdown.`,
       link: '/invoices',
     })
   }
@@ -353,9 +351,10 @@ export default function Invoices() {
                     <div className="flex items-center gap-1 shrink-0">
                       {inv.status === 'pending' && (
                         <button
-                          onClick={() => void markPaid(inv)}
-                          title="Mark as paid"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition"
+                          onClick={() => buckets.length > 0 && void markPaid(inv)}
+                          disabled={buckets.length === 0}
+                          title={buckets.length === 0 ? 'Set up payout buckets in Settings first' : 'Mark as paid'}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400 disabled:cursor-not-allowed transition"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
@@ -500,9 +499,10 @@ export default function Invoices() {
                         <div className="flex items-center justify-end gap-2">
                           {inv.status === 'pending' && (
                             <button
-                              onClick={() => void markPaid(inv)}
-                              title="Mark as paid"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition"
+                              onClick={() => buckets.length > 0 && void markPaid(inv)}
+                              disabled={buckets.length === 0}
+                              title={buckets.length === 0 ? 'Set up payout buckets in Settings first' : 'Mark as paid'}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400 disabled:cursor-not-allowed transition"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
@@ -567,8 +567,7 @@ export default function Invoices() {
           onClose={() => setTransferChecklistInvoice(null)}
           invoiceNumber={transferChecklistInvoice.invoice_number}
           amount={transferChecklistInvoice.amount}
-          taxRate={taxRate}
-          savingsRate={savingsRate}
+          buckets={buckets}
         />
       )}
     </AppLayout>

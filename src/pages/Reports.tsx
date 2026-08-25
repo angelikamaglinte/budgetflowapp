@@ -11,13 +11,15 @@ import { YearOverYearSection } from '@/components/reports/YearOverYearSection'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useRecurringInvoices } from '@/hooks/useRecurringInvoices'
-import { useAllocation } from '@/contexts/AllocationContext'
+import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
+import { computeReservedRate } from '@/lib/payoutBuckets'
 
 export default function Reports() {
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
   const { data: recurringInvoices = [] } = useRecurringInvoices()
-  const { taxRate } = useAllocation()
+  const { data: buckets = [] } = usePayoutBuckets()
+  const reservedRate = computeReservedRate(buckets)
   const isLoading = loadingExp || loadingInv
 
   if (isLoading) {
@@ -51,7 +53,7 @@ export default function Reports() {
         <InvoiceAgingSection invoices={invoices} />
         <ClientIncomeSection invoices={invoices} />
         <CashFlowSection invoices={invoices} expenses={expenses} />
-        <QuarterlyTaxSection invoices={invoices} expenses={expenses} taxRate={taxRate} />
+        <QuarterlyTaxSection invoices={invoices} expenses={expenses} reservedRate={reservedRate} />
         <ProfitLossSection invoices={invoices} expenses={expenses} />
         <CategorySpendingTrendSection expenses={expenses} />
         <UpcomingRevenueSection invoices={invoices} recurringInvoices={recurringInvoices} />

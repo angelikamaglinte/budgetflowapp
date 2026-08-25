@@ -112,9 +112,9 @@ describe('computeMonthlyAverages', () => {
 describe('computePurchaseProgress', () => {
   const averages = { avgMonthlyIncome: 5000, avgMonthlyExpenses: 1000, monthsOfDataUsed: 3 }
 
-  it('computes leftover after tax and savings rates', () => {
+  it('computes leftover after the reserved rate', () => {
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 3000, target_date: null }
-    const result = computePurchaseProgress(plan, averages, 20, 10, TODAY)
+    const result = computePurchaseProgress(plan, averages, 30, TODAY)
 
     // 5000 * (1 - 0.30) - 1000 = 3500 - 1000 = 2500
     expect(result.avgMonthlyLeftover).toBe(2500)
@@ -122,7 +122,7 @@ describe('computePurchaseProgress', () => {
 
   it('leaves target-date fields null when the plan has no target_date', () => {
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 3000, target_date: null }
-    const result = computePurchaseProgress(plan, averages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, averages, 0, TODAY)
 
     expect(result.monthsUntilTarget).toBeNull()
     expect(result.requiredMonthlyExtra).toBeNull()
@@ -133,7 +133,7 @@ describe('computePurchaseProgress', () => {
   it('marks onTrack true and shortfall 0 when leftover covers the required pace', () => {
     // leftover = 5000 - 1000 = 4000/mo, target is 2 months away, price 6000 -> needs 3000/mo
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 6000, target_date: '2026-10-15' }
-    const result = computePurchaseProgress(plan, averages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, averages, 0, TODAY)
 
     expect(result.monthsUntilTarget).toBe(2)
     expect(result.requiredMonthlyExtra).toBe(3000)
@@ -144,7 +144,7 @@ describe('computePurchaseProgress', () => {
   it('marks onTrack false and computes shortfall when leftover falls short', () => {
     // leftover = 4000/mo, target is 1 month away, price 6000 -> needs 6000/mo
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 6000, target_date: '2026-09-10' }
-    const result = computePurchaseProgress(plan, averages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, averages, 0, TODAY)
 
     expect(result.monthsUntilTarget).toBe(1)
     expect(result.requiredMonthlyExtra).toBe(6000)
@@ -154,7 +154,7 @@ describe('computePurchaseProgress', () => {
 
   it('floors monthsUntilTarget at 1 even for a target date in the past', () => {
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 1000, target_date: '2026-01-01' }
-    const result = computePurchaseProgress(plan, averages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, averages, 0, TODAY)
 
     expect(result.monthsUntilTarget).toBe(1)
   })
@@ -162,7 +162,7 @@ describe('computePurchaseProgress', () => {
   it('projects monthsAtCurrentRate and projectedDate when leftover is positive', () => {
     // leftover = 4000/mo, price 10000 -> ceil(2.5) = 3 months
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 10000, target_date: null }
-    const result = computePurchaseProgress(plan, averages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, averages, 0, TODAY)
 
     expect(result.monthsAtCurrentRate).toBe(3)
     expect(result.projectedDate).toEqual(new Date('2026-11-15T12:00:00'))
@@ -171,7 +171,7 @@ describe('computePurchaseProgress', () => {
   it('leaves monthsAtCurrentRate and projectedDate null when leftover is zero or negative', () => {
     const zeroAverages = { avgMonthlyIncome: 500, avgMonthlyExpenses: 500, monthsOfDataUsed: 1 }
     const plan: Pick<PurchasePlan, 'price' | 'target_date'> = { price: 1000, target_date: null }
-    const result = computePurchaseProgress(plan, zeroAverages, 0, 0, TODAY)
+    const result = computePurchaseProgress(plan, zeroAverages, 0, TODAY)
 
     expect(result.avgMonthlyLeftover).toBe(0)
     expect(result.monthsAtCurrentRate).toBeNull()
