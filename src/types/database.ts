@@ -317,6 +317,7 @@ export interface Database {
           address: string | null
           phone: string | null
           email: string | null
+          province: string | null
           tax_rate: number
           savings_rate: number
           onboarding_completed: boolean
@@ -328,6 +329,7 @@ export interface Database {
           address?: string | null
           phone?: string | null
           email?: string | null
+          province?: string | null
           tax_rate?: number
           savings_rate?: number
           onboarding_completed?: boolean
@@ -339,6 +341,7 @@ export interface Database {
           address?: string | null
           phone?: string | null
           email?: string | null
+          province?: string | null
           tax_rate?: number
           savings_rate?: number
           onboarding_completed?: boolean

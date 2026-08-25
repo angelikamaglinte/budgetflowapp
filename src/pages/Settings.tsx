@@ -10,12 +10,15 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAllocation } from '@/contexts/AllocationContext'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
+import { PROVINCE_LABELS } from '@/lib/canadianTax'
+import type { ProvinceCode } from '@/lib/canadianTax'
 
 const settingsSchema = z.object({
   business_name: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
+  province: z.string().optional(),
   tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
   savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
 })
@@ -31,7 +34,7 @@ export default function Settings() {
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema) as Resolver<SettingsFormValues>,
-    defaultValues: { business_name: '', address: '', phone: '', email: '', tax_rate: 20, savings_rate: 10 },
+    defaultValues: { business_name: '', address: '', phone: '', email: '', province: '', tax_rate: 20, savings_rate: 10 },
   })
 
   useEffect(() => {
@@ -41,6 +44,7 @@ export default function Settings() {
         address: profile?.address ?? '',
         phone: profile?.phone ?? '',
         email: profile?.email ?? '',
+        province: profile?.province ?? '',
         tax_rate: profile?.tax_rate ?? 20,
         savings_rate: profile?.savings_rate ?? 10,
       })
@@ -55,6 +59,7 @@ export default function Settings() {
       address: values.address || null,
       phone: values.phone || null,
       email: values.email || null,
+      province: values.province || null,
       tax_rate: values.tax_rate,
       savings_rate: values.savings_rate,
       onboarding_completed: true,
@@ -106,6 +111,19 @@ export default function Settings() {
                 />
                 {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Province</label>
+              <select
+                {...register('province')}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Select province</option>
+                {(Object.keys(PROVINCE_LABELS) as ProvinceCode[]).map((code) => (
+                  <option key={code} value={code}>{PROVINCE_LABELS[code]}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-400">Used for provincial income tax on the Tax tab.</p>
             </div>
           </div>
         </div>
