@@ -225,22 +225,31 @@ export function computeCPP(netSelfEmploymentIncome: number): CppContribution {
   return { base, cpp2, total: base + cpp2 }
 }
 
+// An invoice's `amount` may include GST/HST charged on top of the service
+// fee (common when users record the full amount actually received). Backs
+// out the tax portion so it isn't counted as income.
+export function backOutTax(amountIncludingTax: number, taxRate: number): { subtotal: number; taxAmount: number } {
+  const subtotal = amountIncludingTax / (1 + taxRate / 100)
+  return { subtotal, taxAmount: amountIncludingTax - subtotal }
+}
+
 export interface AnnualIncomeSummary {
   grossIncome: number
   businessExpenses: number
   netIncome: number
 }
 
-// Gross income = paid invoices by date_paid year; deductible expenses =
-// business-type only (personal expenses aren't deductible) — same
-// convention as computeQuarterlyTaxSummary in reports.ts, but for a full
-// year rather than quarterly buckets.
+// Gross income = paid invoices by date_paid year, GST/HST backed out where
+// an invoice has a tax_rate; deductible expenses = business-type only
+// (personal expenses aren't deductible) — same convention as
+// computeQuarterlyTaxSummary in reports.ts, but for a full year rather
+// than quarterly buckets.
 export function computeAnnualNetIncome(invoices: Invoice[], expenses: Expense[], year: number): AnnualIncomeSummary {
   let grossIncome = 0
   for (const inv of invoices) {
     if (inv.status !== 'paid' || !inv.date_paid) continue
     if (parseLocalDate(inv.date_paid).getFullYear() !== year) continue
-    grossIncome += inv.amount
+    grossIncome += inv.tax_rate ? backOutTax(inv.amount, inv.tax_rate).subtotal : inv.amount
   }
 
   let businessExpenses = 0
@@ -280,4 +289,33 @@ export function computeTaxSummary(netIncome: number, province: ProvinceCode | nu
     afterTaxIncome: income - totalOwing,
     effectiveRate: income > 0 ? (totalOwing / income) * 100 : 0,
   }
+}
+
+const INSTALLMENT_THRESHOLD = 3000
+
+export interface KeyDates {
+  balanceOwingDate: Date // April 30 of year+1
+  filingDeadlineDate: Date // June 15 of year+1 — self-employed get an extension past April 30
+  installmentDates: Date[] // Mar 15 / Jun 15 / Sep 15 / Dec 15 of `year` itself
+  likelyRequiresInstallments: boolean
+}
+
+export function computeKeyDates(year: number, totalOwing: number): KeyDates {
+  return {
+    balanceOwingDate: new Date(year + 1, 3, 30),
+    filingDeadlineDate: new Date(year + 1, 5, 15),
+    installmentDates: [
+      new Date(year, 2, 15),
+      new Date(year, 5, 15),
+      new Date(year, 8, 15),
+      new Date(year, 11, 15),
+    ],
+    likelyRequiresInstallments: totalOwing > INSTALLMENT_THRESHOLD,
+  }
+}
+
+export function daysUntil(date: Date, today: Date = new Date()): number {
+  const msPerDay = 1000 * 60 * 60 * 24
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  return Math.round((date.getTime() - startOfToday.getTime()) / msPerDay)
 }

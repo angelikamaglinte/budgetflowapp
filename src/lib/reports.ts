@@ -1,5 +1,6 @@
 import { differenceInCalendarDays, subMonths, addMonths, startOfMonth, endOfMonth, format } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
+import { backOutTax } from '@/lib/canadianTax'
 import type { Invoice, Expense, RecurringInvoice } from '@/types'
 
 export const DUE_SOON_DAYS = 7
@@ -220,9 +221,10 @@ export interface QuarterSummary {
   businessExpenses: number
 }
 
-// Income = paid invoices by date_paid; deductible expenses = business-type
-// only (personal expenses aren't deductible). Tax reserve mirrors the same
-// income × rate model used on the Dashboard and Settings — not tax advice.
+// Income = paid invoices by date_paid, GST/HST backed out where an invoice
+// has a tax_rate; deductible expenses = business-type only (personal
+// expenses aren't deductible). Tax reserve mirrors the same income × rate
+// model used on the Dashboard and Settings — not tax advice.
 export function computeQuarterlyTaxSummary(
   invoices: Invoice[],
   expenses: Expense[],
@@ -241,7 +243,8 @@ export function computeQuarterlyTaxSummary(
     if (inv.status !== 'paid' || !inv.date_paid) continue
     const d = parseLocalDate(inv.date_paid)
     if (d.getFullYear() !== year) continue
-    quarters[Math.floor(d.getMonth() / 3)].income += inv.amount
+    const income = inv.tax_rate ? backOutTax(inv.amount, inv.tax_rate).subtotal : inv.amount
+    quarters[Math.floor(d.getMonth() / 3)].income += income
   }
 
   for (const exp of expenses) {

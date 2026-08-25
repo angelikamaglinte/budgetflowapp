@@ -15,6 +15,7 @@ import { useResizableColumns } from '@/hooks/useResizableColumns'
 import type { ColumnWidthDef } from '@/hooks/useResizableColumns'
 import { ColumnResizeHandle } from '@/components/ui/ColumnResizeHandle'
 import { useAddNotification } from '@/hooks/useNotifications'
+import { useBusinessProfile } from '@/hooks/useBusinessProfile'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAllocation } from '@/contexts/AllocationContext'
 import { exportInvoices } from '@/lib/export'
@@ -101,6 +102,8 @@ export default function Invoices() {
   const { user } = useAuth()
   const { taxRate, savingsRate } = useAllocation()
   const { data: invoices = [], isLoading } = useInvoices()
+  const { data: profile } = useBusinessProfile()
+  const defaultGstRate = profile?.gst_registered ? profile.gst_rate ?? undefined : undefined
 
   const nextInvoiceNumber = useMemo(() => {
     let max = 0
@@ -340,8 +343,9 @@ export default function Invoices() {
                         {inv.invoice_number} · {format(parseLocalDate(inv.issue_date), 'MMM d, yyyy')}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 shrink-0">
+                    <span className="text-sm font-semibold text-gray-900 shrink-0 text-right">
                       ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      {inv.tax_rate != null && <span className="block text-xs font-normal text-gray-400">+GST</span>}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -490,6 +494,7 @@ export default function Invoices() {
                         <span className="text-sm font-semibold text-gray-900">
                           ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
+                        {inv.tax_rate != null && <p className="text-xs text-gray-400">+GST</p>}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -532,6 +537,7 @@ export default function Invoices() {
         initial={editTarget ?? undefined}
         nextInvoiceNumber={nextInvoiceNumber}
         defaultClientName={prefillClientName}
+        defaultGstRate={defaultGstRate}
       />
 
       <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">

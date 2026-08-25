@@ -3,8 +3,11 @@ import {
   computeBracketTax,
   computeIncomeTax,
   computeCPP,
+  backOutTax,
   computeAnnualNetIncome,
   computeTaxSummary,
+  computeKeyDates,
+  daysUntil,
   FEDERAL_BPA_2026,
   FEDERAL_BRACKETS_2026,
   PROVINCE_TAX_2026,
@@ -25,6 +28,7 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     due_date: null,
     date_paid: '2026-01-15',
     notes: null,
+    tax_rate: null,
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   }
@@ -160,6 +164,31 @@ describe('computeAnnualNetIncome', () => {
       netIncome: 0,
     })
   })
+
+  it('backs out GST/HST from invoices that have a tax_rate, leaving plain invoices untouched', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1050, tax_rate: 5, date_paid: '2026-06-01' }), // $1000 + 5% GST
+      makeInvoice({ id: 'i2', amount: 1000, tax_rate: null, date_paid: '2026-02-01' }), // pre-GST-registration
+    ]
+
+    const result = computeAnnualNetIncome(invoices, [], 2026)
+
+    expect(result.grossIncome).toBeCloseTo(2000, 5)
+  })
+})
+
+describe('backOutTax', () => {
+  it('splits a tax-inclusive amount into subtotal and tax', () => {
+    const { subtotal, taxAmount } = backOutTax(1050, 5)
+    expect(subtotal).toBeCloseTo(1000, 5)
+    expect(taxAmount).toBeCloseTo(50, 5)
+  })
+
+  it('returns the full amount as subtotal at a 0% rate', () => {
+    const { subtotal, taxAmount } = backOutTax(500, 0)
+    expect(subtotal).toBe(500)
+    expect(taxAmount).toBe(0)
+  })
 })
 
 describe('computeTaxSummary', () => {
@@ -185,5 +214,46 @@ describe('computeTaxSummary', () => {
   it('returns a zero effective rate for zero or negative income', () => {
     expect(computeTaxSummary(0, 'ON').effectiveRate).toBe(0)
     expect(computeTaxSummary(-500, 'ON').effectiveRate).toBe(0)
+  })
+})
+
+describe('computeKeyDates', () => {
+  it('rolls the balance-owing and filing deadlines into the following year', () => {
+    const dates = computeKeyDates(2026, 5000)
+    expect(dates.balanceOwingDate).toEqual(new Date(2027, 3, 30))
+    expect(dates.filingDeadlineDate).toEqual(new Date(2027, 5, 15))
+  })
+
+  it('returns the four installment dates within the tax year itself', () => {
+    const dates = computeKeyDates(2026, 5000)
+    expect(dates.installmentDates).toEqual([
+      new Date(2026, 2, 15),
+      new Date(2026, 5, 15),
+      new Date(2026, 8, 15),
+      new Date(2026, 11, 15),
+    ])
+  })
+
+  it('flags likelyRequiresInstallments only above the $3,000 threshold', () => {
+    expect(computeKeyDates(2026, 3000).likelyRequiresInstallments).toBe(false)
+    expect(computeKeyDates(2026, 3000.01).likelyRequiresInstallments).toBe(true)
+    expect(computeKeyDates(2026, 0).likelyRequiresInstallments).toBe(false)
+  })
+})
+
+describe('daysUntil', () => {
+  it('returns a positive number of days for a future date', () => {
+    const today = new Date(2026, 0, 1)
+    expect(daysUntil(new Date(2026, 0, 11), today)).toBe(10)
+  })
+
+  it('returns a negative number of days for a past date', () => {
+    const today = new Date(2026, 0, 11)
+    expect(daysUntil(new Date(2026, 0, 1), today)).toBe(-10)
+  })
+
+  it('returns zero for today', () => {
+    const today = new Date(2026, 0, 1)
+    expect(daysUntil(new Date(2026, 0, 1), today)).toBe(0)
   })
 })

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,6 +21,8 @@ const settingsSchema = z.object({
   province: z.string().optional(),
   tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
   savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
+  gst_registered: z.boolean().optional(),
+  gst_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
 })
 
 type SettingsFormValues = z.infer<typeof settingsSchema>
@@ -32,10 +34,12 @@ export default function Settings() {
   const saveProfile = useSaveBusinessProfile()
   const [saved, setSaved] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema) as Resolver<SettingsFormValues>,
-    defaultValues: { business_name: '', address: '', phone: '', email: '', province: '', tax_rate: 20, savings_rate: 10 },
+    defaultValues: { business_name: '', address: '', phone: '', email: '', province: '', tax_rate: 20, savings_rate: 10, gst_registered: false, gst_rate: '' as unknown as number },
   })
+
+  const gstRegistered = useWatch({ control, name: 'gst_registered' })
 
   useEffect(() => {
     if (!isLoading) {
@@ -47,6 +51,8 @@ export default function Settings() {
         province: profile?.province ?? '',
         tax_rate: profile?.tax_rate ?? 20,
         savings_rate: profile?.savings_rate ?? 10,
+        gst_registered: profile?.gst_registered ?? false,
+        gst_rate: profile?.gst_rate ?? ('' as unknown as number),
       })
     }
   }, [isLoading, profile, reset])
@@ -62,6 +68,8 @@ export default function Settings() {
       province: values.province || null,
       tax_rate: values.tax_rate,
       savings_rate: values.savings_rate,
+      gst_registered: values.gst_registered ?? false,
+      gst_rate: values.gst_registered ? (values.gst_rate ?? null) : null,
       onboarding_completed: true,
     })
     await refreshAllocation()
@@ -124,6 +132,31 @@ export default function Settings() {
                 ))}
               </select>
               <p className="mt-1 text-xs text-gray-400">Used for provincial income tax on the Tax tab.</p>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 w-fit cursor-pointer">
+                <input
+                  {...register('gst_registered')}
+                  type="checkbox"
+                  className="w-4 h-4 accent-primary-600 cursor-pointer"
+                />
+                I'm registered for GST/HST
+              </label>
+              {gstRegistered && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    {...register('gst_rate')}
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    placeholder="e.g. 5"
+                    className="w-24 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-500">% default rate for new invoices</span>
+                </div>
+              )}
+              {errors.gst_rate && <p className="mt-1 text-xs text-red-600">{errors.gst_rate.message}</p>}
             </div>
           </div>
         </div>

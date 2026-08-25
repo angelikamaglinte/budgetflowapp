@@ -1,17 +1,24 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, Landmark, MapPin, ShieldCheck, Receipt, Wallet, AlertCircle } from 'lucide-react'
+import { format } from 'date-fns'
+import { ChevronLeft, ChevronRight, TrendingUp, Landmark, MapPin, ShieldCheck, Receipt, Wallet, AlertCircle, CalendarClock } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
 import { useAuth } from '@/contexts/AuthContext'
-import { computeAnnualNetIncome, computeTaxSummary, PROVINCE_LABELS } from '@/lib/canadianTax'
+import { computeAnnualNetIncome, computeTaxSummary, computeKeyDates, daysUntil, PROVINCE_LABELS } from '@/lib/canadianTax'
 import type { ProvinceCode } from '@/lib/canadianTax'
 import { formatMoney } from '@/lib/savingsCalculator'
 
 function formatPercent(n: number) {
   return n.toFixed(1) + '%'
+}
+
+function formatDaysLabel(days: number) {
+  if (days < 0) return 'Passed'
+  if (days === 0) return 'Today'
+  return `${days} day${days === 1 ? '' : 's'} away`
 }
 
 export default function Tax() {
@@ -26,6 +33,7 @@ export default function Tax() {
 
   const income = useMemo(() => computeAnnualNetIncome(invoices, expenses, year), [invoices, expenses, year])
   const summary = useMemo(() => computeTaxSummary(income.netIncome, province), [income.netIncome, province])
+  const keyDates = useMemo(() => computeKeyDates(year, summary.totalOwing), [year, summary.totalOwing])
 
   function handleProvinceChange(value: string) {
     if (!user) return
@@ -136,11 +144,41 @@ export default function Tax() {
             />
           </div>
 
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-xs text-gray-400 mt-4 mb-6">
             CPP breakdown: {formatMoney(summary.cpp.base)} base contribution
             {summary.cpp.cpp2 > 0 && ` + ${formatMoney(summary.cpp.cpp2)} CPP2`} — self-employed contributors pay
             both the employee and employer portions.
           </p>
+
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Key Dates</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 bg-[#FAECEC] rounded-xl">
+                <Receipt className="w-4 h-4 text-[#C4554D] shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Balance Owing</p>
+                  <p className="text-xs text-gray-500">{format(keyDates.balanceOwingDate, 'MMMM d, yyyy')}</p>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 shrink-0">{formatDaysLabel(daysUntil(keyDates.balanceOwingDate))}</p>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-[#E9F3F7] rounded-xl">
+                <CalendarClock className="w-4 h-4 text-[#487CA5] shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Filing Deadline</p>
+                  <p className="text-xs text-gray-500">{format(keyDates.filingDeadlineDate, 'MMMM d, yyyy')}</p>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 shrink-0">{formatDaysLabel(daysUntil(keyDates.filingDeadlineDate))}</p>
+              </div>
+            </div>
+            {keyDates.likelyRequiresInstallments && (
+              <p className="text-xs text-gray-400 mt-4">
+                Since your estimated total owing is over $3,000, the CRA's default expectation is quarterly
+                installments ({keyDates.installmentDates.map((d) => format(d, 'MMM d')).join(' / ')}, about{' '}
+                {formatMoney(summary.totalOwing / 4)} each) — but most people just pay the full amount by April 30
+                instead and accept any small instalment interest. Totally optional.
+              </p>
+            )}
+          </div>
         </>
       )}
     </AppLayout>
