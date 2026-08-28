@@ -17,13 +17,15 @@ import {
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAllocation } from '@/contexts/AllocationContext'
+import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
 import { computeMonthlyAverages, formatMoney } from '@/lib/savingsCalculator'
+import { computeReservedRate } from '@/lib/payoutBuckets'
 import type { PurchasePlan } from '@/types'
 
 export default function Calculator() {
   const { user } = useAuth()
-  const { taxRate, savingsRate } = useAllocation()
+  const { data: buckets = [] } = usePayoutBuckets()
+  const reservedRate = computeReservedRate(buckets)
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
   const { data: plans = [], isLoading: loadingPlans } = usePurchasePlans()
@@ -39,7 +41,7 @@ export default function Calculator() {
     () => computeMonthlyAverages(expenses, invoices),
     [expenses, invoices]
   )
-  const avgMonthlyLeftover = averages.avgMonthlyIncome * (1 - (taxRate + savingsRate) / 100) - averages.avgMonthlyExpenses
+  const avgMonthlyLeftover = averages.avgMonthlyIncome * (1 - reservedRate / 100) - averages.avgMonthlyExpenses
 
   async function handleSubmit(values: PurchasePlanFormValues) {
     const payload = { ...values, target_date: values.target_date || null }
@@ -104,7 +106,7 @@ export default function Calculator() {
               iconBg="bg-primary-50"
             />
             <StatCard
-              label={`Leftover after ${taxRate}% tax + ${savingsRate}% savings`}
+              label={`Leftover after ${reservedRate}% reserved`}
               value={avgMonthlyLeftover}
               format={formatMoney}
               delay={0.1}
@@ -144,8 +146,7 @@ export default function Calculator() {
                   key={plan.id}
                   plan={plan}
                   averages={averages}
-                  taxRate={taxRate}
-                  savingsRate={savingsRate}
+                  reservedRate={reservedRate}
                   delay={Math.min(i, 15) * 0.05}
                   onEdit={() => openEdit(plan)}
                   onDelete={() => setDeleteId(plan.id)}

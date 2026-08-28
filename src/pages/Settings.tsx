@@ -7,8 +7,8 @@ import { motion } from 'motion/react'
 import { Check } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { PayoutBucketsEditor } from '@/components/settings/PayoutBucketsEditor'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAllocation } from '@/contexts/AllocationContext'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
 import { PROVINCE_LABELS } from '@/lib/canadianTax'
 import type { ProvinceCode } from '@/lib/canadianTax'
@@ -19,8 +19,6 @@ const settingsSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
   province: z.string().optional(),
-  tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
-  savings_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less'),
   gst_registered: z.boolean().optional(),
   gst_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
   tuition_credit_remaining: z.coerce.number().min(0, 'Must be 0 or more').optional(),
@@ -30,7 +28,6 @@ type SettingsFormValues = z.infer<typeof settingsSchema>
 
 export default function Settings() {
   const { user } = useAuth()
-  const { refresh: refreshAllocation } = useAllocation()
   const { data: profile, isLoading } = useBusinessProfile()
   const saveProfile = useSaveBusinessProfile()
   const [saved, setSaved] = useState(false)
@@ -43,8 +40,6 @@ export default function Settings() {
       phone: '',
       email: '',
       province: '',
-      tax_rate: 20,
-      savings_rate: 10,
       gst_registered: false,
       gst_rate: '' as unknown as number,
       tuition_credit_remaining: '' as unknown as number,
@@ -61,8 +56,6 @@ export default function Settings() {
         phone: profile?.phone ?? '',
         email: profile?.email ?? '',
         province: profile?.province ?? '',
-        tax_rate: profile?.tax_rate ?? 20,
-        savings_rate: profile?.savings_rate ?? 10,
         gst_registered: profile?.gst_registered ?? false,
         gst_rate: profile?.gst_rate ?? ('' as unknown as number),
         tuition_credit_remaining: profile?.tuition_credit_remaining ?? ('' as unknown as number),
@@ -79,20 +72,18 @@ export default function Settings() {
       phone: values.phone || null,
       email: values.email || null,
       province: values.province || null,
-      tax_rate: values.tax_rate,
-      savings_rate: values.savings_rate,
       gst_registered: values.gst_registered ?? false,
       gst_rate: values.gst_registered ? (values.gst_rate ?? null) : null,
       tuition_credit_remaining: values.tuition_credit_remaining ?? null,
       onboarding_completed: true,
     })
-    await refreshAllocation()
     setSaved(true)
   }
 
   return (
-    <AppLayout title="Settings" subtitle="Your business info and allocation rates" showPeriodSelector={false}>
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl flex flex-col gap-6">
+    <AppLayout title="Settings" subtitle="Your business info and payout buckets" showPeriodSelector={false}>
+      <div className="max-w-2xl flex flex-col gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Business Info</h2>
           <p className="text-xs text-gray-400 mb-4">Appears at the top of every invoice PDF you generate.</p>
@@ -191,44 +182,6 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Allocation Rates</h2>
-          <p className="text-xs text-gray-400 mb-4">Used to calculate your Tax Reserve and Savings on the Dashboard.</p>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold text-gray-900">Tax Reserve</p>
-              <div className="flex items-center gap-2">
-                <input
-                  {...register('tax_rate')}
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-500">%</span>
-              </div>
-            </div>
-            {errors.tax_rate && <p className="text-xs text-red-600 text-right">{errors.tax_rate.message}</p>}
-            <div className="h-px bg-gray-50" />
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold text-gray-900">Personal Savings</p>
-              <div className="flex items-center gap-2">
-                <input
-                  {...register('savings_rate')}
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  className="w-20 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-500">%</span>
-              </div>
-            </div>
-            {errors.savings_rate && <p className="text-xs text-red-600 text-right">{errors.savings_rate.message}</p>}
-          </div>
-        </div>
-
         <div className="flex items-center gap-3">
           <PrimaryButton type="submit" disabled={isSubmitting} className="px-5 py-2.5 rounded-xl text-sm font-medium">
             {isSubmitting ? 'Saving...' : 'Save Settings'}
@@ -244,6 +197,9 @@ export default function Settings() {
           )}
         </div>
       </form>
+
+      <PayoutBucketsEditor defaultTaxRate={profile?.tax_rate ?? 20} defaultSavingsRate={profile?.savings_rate ?? 10} />
+      </div>
     </AppLayout>
   )
 }

@@ -9,15 +9,14 @@ import type { PurchasePlan } from '@/types'
 interface PurchasePlanCardProps {
   plan: PurchasePlan
   averages: MonthlyAverages
-  taxRate: number
-  savingsRate: number
+  reservedRate: number
   delay?: number
   onEdit: () => void
   onDelete: () => void
 }
 
-export function PurchasePlanCard({ plan, averages, taxRate, savingsRate, delay = 0, onEdit, onDelete }: PurchasePlanCardProps) {
-  const progress = computePurchaseProgress(plan, averages, taxRate, savingsRate)
+export function PurchasePlanCard({ plan, averages, reservedRate, delay = 0, onEdit, onDelete }: PurchasePlanCardProps) {
+  const progress = computePurchaseProgress(plan, averages, reservedRate)
   const { avgMonthlyLeftover, monthsUntilTarget, requiredMonthlyExtra, onTrack, shortfall, monthsAtCurrentRate, projectedDate } = progress
 
   return (
@@ -60,8 +59,8 @@ export function PurchasePlanCard({ plan, averages, taxRate, savingsRate, delay =
         <div className="flex items-start gap-2 bg-[#FAECEC] text-[#C4554D] text-xs px-3 py-2.5 rounded-xl">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>
-            Based on your last {averages.monthsOfDataUsed || 3} months, your expenses plus your {taxRate}% tax
-            reserve and {savingsRate}% savings leave nothing extra to put toward this right now.
+            Based on your last {averages.monthsOfDataUsed || 3} months, your expenses plus your {reservedRate}% in
+            reserved buckets leave nothing extra to put toward this right now.
           </span>
         </div>
       ) : (

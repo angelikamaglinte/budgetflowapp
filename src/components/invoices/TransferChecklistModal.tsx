@@ -1,5 +1,7 @@
-import { CheckCircle2, ShieldCheck, PiggyBank } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { computeBucketSplit, getBucketStyle } from '@/lib/payoutBuckets'
+import type { PayoutBucket } from '@/types'
 
 function formatMoney(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -10,13 +12,11 @@ interface TransferChecklistModalProps {
   onClose: () => void
   invoiceNumber: string
   amount: number
-  taxRate: number
-  savingsRate: number
+  buckets: PayoutBucket[]
 }
 
-export function TransferChecklistModal({ open, onClose, invoiceNumber, amount, taxRate, savingsRate }: TransferChecklistModalProps) {
-  const taxAmount = amount * (taxRate / 100)
-  const savingsAmount = amount * (savingsRate / 100)
+export function TransferChecklistModal({ open, onClose, invoiceNumber, amount, buckets }: TransferChecklistModalProps) {
+  const split = computeBucketSplit(amount, buckets)
 
   return (
     <Modal open={open} onClose={onClose} maxWidth="max-w-sm">
@@ -29,20 +29,21 @@ export function TransferChecklistModal({ open, onClose, invoiceNumber, amount, t
           You received {formatMoney(amount)}. Here's what to set aside now.
         </p>
         <div className="flex flex-col gap-3 mb-5">
-          <div className="flex items-center gap-3 p-3 bg-[#FAECEC] rounded-xl">
-            <ShieldCheck className="w-4 h-4 text-[#C4554D] shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">Move to Tax Reserve ({taxRate}%)</p>
-            </div>
-            <p className="text-sm font-bold text-gray-900 shrink-0">{formatMoney(taxAmount)}</p>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-[#E9F3F7] rounded-xl">
-            <PiggyBank className="w-4 h-4 text-[#487CA5] shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">Move to Savings ({savingsRate}%)</p>
-            </div>
-            <p className="text-sm font-bold text-gray-900 shrink-0">{formatMoney(savingsAmount)}</p>
-          </div>
+          {split.map(({ bucket, amount: bucketAmount }, i) => {
+            const style = getBucketStyle(i)
+            const Icon = style.icon
+            return (
+              <div key={bucket.id} className={`flex items-center gap-3 p-3 ${style.iconBg} rounded-xl`}>
+                <Icon className={`w-4 h-4 ${style.iconColor} shrink-0`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">
+                    Move to {bucket.name}{bucket.percentage != null ? ` (${bucket.percentage}%)` : ''}
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-gray-900 shrink-0">{formatMoney(bucketAmount)}</p>
+              </div>
+            )
+          })}
         </div>
         <button
           onClick={onClose}
