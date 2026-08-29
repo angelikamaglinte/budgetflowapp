@@ -14,6 +14,7 @@ import {
   CalendarDays,
   Wrench,
   Landmark,
+  Target,
   ChevronRight,
   X,
 } from 'lucide-react'
@@ -40,6 +41,7 @@ const navItems: (LeafItem | GroupItem)[] = [
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/calculator', label: 'Calculator', icon: Calculator },
   { to: '/tax', label: 'Tax', icon: Landmark },
+  { to: '/budgets', label: 'Budgets', icon: Target },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   {
     label: 'Tools',

@@ -28,6 +28,9 @@ supabase/schema.sql
 supabase/migrate-data.sql
 expenses_rows.csv
 invoices_rows.csv
+supabase/fix-missing-td-fee-row.sql
+supabase/import-2025-business-expenses.sql
+Contractor_Expenses_2025 (1).xlsx
 
 # Test env (holds the test Supabase project's URL/anon key + test user credentials)
 .env.test
