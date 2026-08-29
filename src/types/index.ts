@@ -27,6 +27,10 @@ export type PayoutBucket = Database['public']['Tables']['payout_buckets']['Row']
 export type PayoutBucketInsert = Database['public']['Tables']['payout_buckets']['Insert']
 export type PayoutBucketUpdate = Database['public']['Tables']['payout_buckets']['Update']
 
+export type BudgetCategory = Database['public']['Tables']['budget_categories']['Row']
+export type BudgetCategoryInsert = Database['public']['Tables']['budget_categories']['Insert']
+export type BudgetCategoryUpdate = Database['public']['Tables']['budget_categories']['Update']
+
 export type InvoiceReminder = Database['public']['Tables']['invoice_reminders']['Row']
 export type InvoiceReminderInsert = Database['public']['Tables']['invoice_reminders']['Insert']
 export type InvoiceReminderUpdate = Database['public']['Tables']['invoice_reminders']['Update']
