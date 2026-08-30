@@ -36,6 +36,7 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     issue_date: '2026-07-01',
     due_date: null,
     date_paid: '2026-07-15',
+    budget_month: null,
     notes: null,
     tax_rate: null,
     created_at: '2026-07-01T00:00:00Z',

@@ -1,4 +1,4 @@
-import { startOfMonth, endOfMonth } from 'date-fns'
+import { startOfMonth, endOfMonth, format } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
 import { computeBucketSplit } from '@/lib/payoutBuckets'
 import type { BucketSplitEntry } from '@/lib/payoutBuckets'
@@ -31,13 +31,16 @@ export function computeMonthlySummary(
 ): MonthlySummary {
   const start = startOfMonth(monthDate)
   const end = endOfMonth(monthDate)
+  const targetMonth = format(monthDate, 'yyyy-MM')
 
+  // budget_month lets the user tag which month's budget a payment counts
+  // toward, independent of when it actually landed (date_paid) — a fixed
+  // "always N months behind" rule doesn't work since her payment timing
+  // straddles month boundaries inconsistently. Falls back to date_paid's
+  // own month for invoices that predate this field.
   const paidInvoices = invoices
     .filter((inv) => inv.status === 'paid' && inv.date_paid)
-    .filter((inv) => {
-      const d = parseLocalDate(inv.date_paid!)
-      return d >= start && d <= end
-    })
+    .filter((inv) => (inv.budget_month ?? inv.date_paid!.slice(0, 7)) === targetMonth)
 
   const invoiceSplits: InvoiceSplit[] = paidInvoices.map((invoice) => ({
     invoice,

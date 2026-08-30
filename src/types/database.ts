@@ -65,6 +65,7 @@ export interface Database {
           issue_date: string
           due_date: string | null
           date_paid: string | null
+          budget_month: string | null
           notes: string | null
           tax_rate: number | null
           created_at: string
@@ -80,6 +81,7 @@ export interface Database {
           issue_date: string
           due_date?: string | null
           date_paid?: string | null
+          budget_month?: string | null
           notes?: string | null
           tax_rate?: number | null
           created_at?: string
@@ -95,6 +97,7 @@ export interface Database {
           issue_date?: string
           due_date?: string | null
           date_paid?: string | null
+          budget_month?: string | null
           notes?: string | null
           tax_rate?: number | null
           created_at?: string

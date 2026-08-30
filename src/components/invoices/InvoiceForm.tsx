@@ -16,6 +16,7 @@ const invoiceSchema = z.object({
   issue_date: z.string().min(1, 'Issue date is required'),
   due_date: z.string().optional().transform(v => v === '' ? undefined : v),
   date_paid: z.string().optional().transform(v => v === '' ? undefined : v),
+  budget_month: z.string().optional().transform(v => v === '' ? undefined : v),
   notes: z.string().optional(),
   tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
 })
@@ -44,6 +45,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial, defaultClientNam
       issue_date: new Date().toISOString().split('T')[0],
       due_date: '',
       date_paid: '',
+      budget_month: '',
       notes: '',
       tax_rate: defaultGstRate ?? ('' as unknown as number),
     },
@@ -62,6 +64,7 @@ export function InvoiceForm({ open, onClose, onSubmit, initial, defaultClientNam
         issue_date: initial?.issue_date ?? new Date().toISOString().split('T')[0],
         due_date: initial?.due_date ?? '',
         date_paid: initial?.date_paid ?? '',
+        budget_month: initial?.budget_month ?? '',
         notes: initial?.notes ?? '',
         tax_rate: initial ? (initial.tax_rate ?? ('' as unknown as number)) : (defaultGstRate ?? ('' as unknown as number)),
       })
@@ -186,14 +189,25 @@ export function InvoiceForm({ open, onClose, onSubmit, initial, defaultClientNam
           </div>
 
           {watchedStatus === 'paid' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date Paid</label>
-              <input
-                {...register('date_paid')}
-                type="date"
-                className="w-full px-3 py-2.5 rounded-xl border border-[#DCE9DA] bg-[#EEF3ED] text-sm focus:outline-none focus:ring-2 focus:ring-[#548164] focus:border-transparent"
-              />
-              <p className="mt-1 text-xs text-gray-400">The date you actually received the money</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Date Paid</label>
+                <input
+                  {...register('date_paid')}
+                  type="date"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#DCE9DA] bg-[#EEF3ED] text-sm focus:outline-none focus:ring-2 focus:ring-[#548164] focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-400">The date you actually received the money</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Budget Month</label>
+                <input
+                  {...register('budget_month')}
+                  type="month"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#DCE9DA] bg-[#EEF3ED] text-sm focus:outline-none focus:ring-2 focus:ring-[#548164] focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-400">Which month's budget this counts toward</p>
+              </div>
             </div>
           )}
 
