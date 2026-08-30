@@ -63,7 +63,7 @@ export default function Budgets() {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {summary.invoiceSplits.map(({ invoice, split }, i) => (
+                {summary.invoiceSplits.map(({ invoice, preTaxAmount, gstAmount, split }, i) => (
                   <motion.div
                     key={invoice.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -78,7 +78,14 @@ export default function Budgets() {
                           {invoice.invoice_number} · paid {format(parseLocalDate(invoice.date_paid!), 'MMM d, yyyy')}
                         </p>
                       </div>
-                      <p className="text-lg font-bold text-gray-900 shrink-0">{formatMoney(invoice.amount)}</p>
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-bold text-gray-900">{formatMoney(invoice.amount)}</p>
+                        {gstAmount > 0 && (
+                          <p className="text-xs text-gray-400">
+                            {formatMoney(preTaxAmount)} split · {formatMoney(gstAmount)} GST held for CRA
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       {split.map(({ bucket, amount }, j) => {

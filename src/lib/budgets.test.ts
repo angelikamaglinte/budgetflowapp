@@ -71,6 +71,28 @@ describe('computeMonthlySummary', () => {
     expect(summary.invoiceSplits[0].invoice.id).toBe('i1')
   })
 
+  it('backs out GST/HST before splitting an invoice into buckets', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1050, tax_rate: 5, status: 'paid', date_paid: '2026-08-05' }),
+    ]
+
+    const summary = computeMonthlySummary(invoices, [], buckets, new Date('2026-08-15'))
+
+    expect(summary.invoiceSplits[0].gstAmount).toBeCloseTo(50, 5)
+    expect(summary.invoiceSplits[0].preTaxAmount).toBeCloseTo(1000, 5)
+    // 20% tax reserve of the $1000 pre-tax subtotal, not the $1050 gross
+    expect(summary.invoiceSplits[0].split.find((s) => s.bucket.id === 'tax')!.amount).toBeCloseTo(200, 5)
+  })
+
+  it('treats an invoice with no tax_rate as fully pre-tax', () => {
+    const invoices = [makeInvoice({ id: 'i1', amount: 1000, tax_rate: null, status: 'paid', date_paid: '2026-08-05' })]
+
+    const summary = computeMonthlySummary(invoices, [], buckets, new Date('2026-08-15'))
+
+    expect(summary.invoiceSplits[0].gstAmount).toBe(0)
+    expect(summary.invoiceSplits[0].preTaxAmount).toBe(1000)
+  })
+
   it('uses budget_month over date_paid when the invoice is explicitly tagged', () => {
     const invoices = [
       makeInvoice({ id: 'i1', amount: 1000, status: 'paid', date_paid: '2026-08-31', budget_month: '2026-09' }),

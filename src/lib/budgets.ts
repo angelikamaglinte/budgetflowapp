@@ -2,10 +2,13 @@ import { startOfMonth, endOfMonth, format } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
 import { computeBucketSplit } from '@/lib/payoutBuckets'
 import type { BucketSplitEntry } from '@/lib/payoutBuckets'
+import { backOutTax } from '@/lib/canadianTax'
 import type { Expense, Invoice, PayoutBucket } from '@/types'
 
 export interface InvoiceSplit {
   invoice: Invoice
+  preTaxAmount: number
+  gstAmount: number
   split: BucketSplitEntry[]
 }
 
@@ -42,10 +45,20 @@ export function computeMonthlySummary(
     .filter((inv) => inv.status === 'paid' && inv.date_paid)
     .filter((inv) => (inv.budget_month ?? inv.date_paid!.slice(0, 7)) === targetMonth)
 
-  const invoiceSplits: InvoiceSplit[] = paidInvoices.map((invoice) => ({
-    invoice,
-    split: computeBucketSplit(invoice.amount, buckets),
-  }))
+  // GST/HST collected isn't real income — it's held for the CRA (see the
+  // Tax tab's GST/HST Remittance section) — so it's backed out before
+  // splitting into buckets, the same way computeAnnualNetIncome does.
+  const invoiceSplits: InvoiceSplit[] = paidInvoices.map((invoice) => {
+    const { subtotal, taxAmount } = invoice.tax_rate
+      ? backOutTax(invoice.amount, invoice.tax_rate)
+      : { subtotal: invoice.amount, taxAmount: 0 }
+    return {
+      invoice,
+      preTaxAmount: subtotal,
+      gstAmount: taxAmount,
+      split: computeBucketSplit(subtotal, buckets),
+    }
+  })
 
   const remainderBucket = buckets.find((b) => b.percentage == null) ?? null
   const remainderTotal = remainderBucket
