@@ -362,7 +362,7 @@ export default function Invoices() {
                     </div>
                     <span className="text-sm font-semibold text-gray-900 shrink-0 text-right">
                       ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      {inv.tax_rate != null && <span className="block text-xs font-normal text-gray-400">+GST</span>}
+                      {!!inv.tax_rate && <span className="block text-xs font-normal text-gray-400">+GST</span>}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -527,7 +527,7 @@ export default function Invoices() {
                         <span className="text-sm font-semibold text-gray-900">
                           ${inv.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
-                        {inv.tax_rate != null && <p className="text-xs text-gray-400">+GST</p>}
+                        {!!inv.tax_rate && <p className="text-xs text-gray-400">+GST</p>}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">

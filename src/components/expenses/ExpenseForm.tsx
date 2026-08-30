@@ -17,7 +17,13 @@ const expenseSchema = z.object({
   type: z.enum(['business', 'personal']),
   amount: z.coerce.number().positive('Amount must be positive'),
   notes: z.string().optional(),
-  tax_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
+  // Leaving this blank must resolve to null, not 0 — z.coerce.number() alone
+  // would coerce an empty string to 0 before .optional() ever sees it,
+  // silently saving "0% GST" instead of "no GST tracked here".
+  tax_rate: z.preprocess(
+    (v) => (v === '' || v == null ? null : v),
+    z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').nullable()
+  ),
 })
 
 export type ExpenseFormValues = z.infer<typeof expenseSchema>
