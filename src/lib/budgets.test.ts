@@ -32,6 +32,7 @@ function makeInvoice(overrides: Partial<Invoice>): Invoice {
     issue_date: '2026-08-01',
     due_date: null,
     date_paid: '2026-08-10',
+    budget_month: null,
     notes: null,
     tax_rate: null,
     created_at: '2026-08-01T00:00:00Z',
@@ -68,6 +69,41 @@ describe('computeMonthlySummary', () => {
 
     expect(summary.invoiceSplits).toHaveLength(1)
     expect(summary.invoiceSplits[0].invoice.id).toBe('i1')
+  })
+
+  it('uses budget_month over date_paid when the invoice is explicitly tagged', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1000, status: 'paid', date_paid: '2026-08-31', budget_month: '2026-09' }),
+    ]
+
+    const augustSummary = computeMonthlySummary(invoices, [], buckets, new Date('2026-08-15'))
+    const septemberSummary = computeMonthlySummary(invoices, [], buckets, new Date('2026-09-15'))
+
+    expect(augustSummary.invoiceSplits).toHaveLength(0)
+    expect(septemberSummary.invoiceSplits).toHaveLength(1)
+  })
+
+  it('falls back to date_paid\'s month when budget_month is not set', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1000, status: 'paid', date_paid: '2026-08-05', budget_month: null }),
+    ]
+
+    const summary = computeMonthlySummary(invoices, [], buckets, new Date('2026-08-15'))
+
+    expect(summary.invoiceSplits).toHaveLength(1)
+  })
+
+  it('lets two invoices with the same date_paid land in different months via budget_month', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1000, status: 'paid', date_paid: '2026-08-31', budget_month: '2026-08' }),
+      makeInvoice({ id: 'i2', amount: 500, status: 'paid', date_paid: '2026-08-31', budget_month: '2026-09' }),
+    ]
+
+    const augustSummary = computeMonthlySummary(invoices, [], buckets, new Date('2026-08-15'))
+    const septemberSummary = computeMonthlySummary(invoices, [], buckets, new Date('2026-09-15'))
+
+    expect(augustSummary.invoiceSplits.map((s) => s.invoice.id)).toEqual(['i1'])
+    expect(septemberSummary.invoiceSplits.map((s) => s.invoice.id)).toEqual(['i2'])
   })
 
   it('accumulates the remainder bucket share across multiple invoices in the same month', () => {

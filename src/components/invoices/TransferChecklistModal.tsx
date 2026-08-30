@@ -13,9 +13,19 @@ interface TransferChecklistModalProps {
   invoiceNumber: string
   amount: number
   buckets: PayoutBucket[]
+  budgetMonth: string
+  onBudgetMonthChange: (month: string) => void
 }
 
-export function TransferChecklistModal({ open, onClose, invoiceNumber, amount, buckets }: TransferChecklistModalProps) {
+export function TransferChecklistModal({
+  open,
+  onClose,
+  invoiceNumber,
+  amount,
+  buckets,
+  budgetMonth,
+  onBudgetMonthChange,
+}: TransferChecklistModalProps) {
   const split = computeBucketSplit(amount, buckets)
 
   return (
@@ -25,9 +35,21 @@ export function TransferChecklistModal({ open, onClose, invoiceNumber, amount, b
           <CheckCircle2 className="w-6 h-6 text-[#548164]" />
         </div>
         <h3 className="font-semibold text-gray-900 mb-1">Invoice {invoiceNumber} marked paid</h3>
-        <p className="text-sm text-gray-500 mb-5">
+        <p className="text-sm text-gray-500 mb-4">
           You received {formatMoney(amount)}. Here's what to set aside now.
         </p>
+        <div className="mb-5">
+          <label htmlFor="transfer-budget-month" className="block text-xs font-medium text-gray-500 mb-1.5">
+            Which month's budget does this count toward?
+          </label>
+          <input
+            id="transfer-budget-month"
+            type="month"
+            value={budgetMonth}
+            onChange={(e) => onBudgetMonthChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+        </div>
         <div className="flex flex-col gap-3 mb-5">
           {split.map(({ bucket, amount: bucketAmount }, i) => {
             const style = getBucketStyle(i)

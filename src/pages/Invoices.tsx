@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { format } from 'date-fns'
+import { format, addMonths } from 'date-fns'
 import { motion } from 'motion/react'
 import { Plus, Search, Pencil, Trash2, CheckCircle, Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -23,7 +23,7 @@ import { getEffectiveStatus } from '@/lib/invoiceStatus'
 import { computeBucketSplit } from '@/lib/payoutBuckets'
 import { formatMoney } from '@/lib/savingsCalculator'
 import type { Invoice } from '@/types'
-import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
+import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 import { cn, parseLocalDate } from '@/lib/utils'
 
 type SortKey = 'invoice_number' | 'client_name' | 'issue_date' | 'due_date' | 'date_paid' | 'status' | 'amount'
@@ -130,6 +130,7 @@ export default function Invoices() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [prefillClientName, setPrefillClientName] = useState<string | undefined>(undefined)
   const [transferChecklistInvoice, setTransferChecklistInvoice] = useState<Invoice | null>(null)
+  const [markedBudgetMonth, setMarkedBudgetMonth] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('issue_date')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const { widths: colWidths, resizingKey, startResize } = useResizableColumns('budgetflow:invoices:column-widths', COLUMN_DEFS)
@@ -212,17 +213,23 @@ export default function Invoices() {
   }
 
   async function markPaid(inv: Invoice) {
+    // Defaults to next month since that's her common case (payments landing
+    // near a month boundary fund the following month's expenses) — editable
+    // right in the checklist modal that follows, and later via Edit Invoice.
+    const budgetMonth = format(addMonths(new Date(), 1), 'yyyy-MM')
     await updateInvoice.mutateAsync({
       id: inv.id,
       status: 'paid',
       date_paid: new Date().toISOString().split('T')[0],
+      budget_month: budgetMonth,
     })
     setTransferChecklistInvoice(inv)
+    setMarkedBudgetMonth(budgetMonth)
     const split = computeBucketSplit(inv.amount, buckets)
     const breakdown = split.map((s) => `${s.bucket.name} ${formatMoney(s.amount)}`).join(' · ')
     void addNotification.mutateAsync({
       user_id: user!.id,
-      message: `💰 Invoice ${inv.invoice_number} (${inv.client_name}) paid — ${formatMoney(inv.amount)}. ${breakdown}`,
+      message: `💰 Invoice ${inv.invoice_number} (${inv.client_name}) paid — ${formatMoney(inv.amount)}. Counted toward ${periodLabel(budgetMonth)}. ${breakdown}`,
       link: '/budgets',
     })
   }
@@ -572,6 +579,11 @@ export default function Invoices() {
           invoiceNumber={transferChecklistInvoice.invoice_number}
           amount={transferChecklistInvoice.amount}
           buckets={buckets}
+          budgetMonth={markedBudgetMonth}
+          onBudgetMonthChange={(month) => {
+            setMarkedBudgetMonth(month)
+            void updateInvoice.mutateAsync({ id: transferChecklistInvoice.id, budget_month: month })
+          }}
         />
       )}
     </AppLayout>
