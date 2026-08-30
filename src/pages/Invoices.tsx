@@ -26,7 +26,7 @@ import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 import { cn, parseLocalDate } from '@/lib/utils'
 
-type SortKey = 'invoice_number' | 'client_name' | 'issue_date' | 'due_date' | 'date_paid' | 'status' | 'amount'
+type SortKey = 'invoice_number' | 'client_name' | 'issue_date' | 'due_date' | 'date_paid' | 'budget_month' | 'status' | 'amount'
 type SortDir = 'asc' | 'desc'
 
 const DEFAULT_DIR: Record<SortKey, SortDir> = {
@@ -35,8 +35,15 @@ const DEFAULT_DIR: Record<SortKey, SortDir> = {
   issue_date: 'desc',
   due_date: 'desc',
   date_paid: 'desc',
+  budget_month: 'desc',
   status: 'asc',
   amount: 'desc',
+}
+
+function formatBudgetMonth(budgetMonth: string | null): string {
+  if (!budgetMonth) return '—'
+  const [year, month] = budgetMonth.split('-')
+  return format(new Date(Number(year), Number(month) - 1, 1), 'MMM yyyy')
 }
 
 // minWidth is set so each header's label + sort icon always fits on one
@@ -49,6 +56,7 @@ const COLUMN_DEFS: ColumnWidthDef[] = [
   { key: 'issue_date', defaultWidth: 140, minWidth: 140 },
   { key: 'due_date', defaultWidth: 140, minWidth: 140 },
   { key: 'date_paid', defaultWidth: 140, minWidth: 140 },
+  { key: 'budget_month', defaultWidth: 140, minWidth: 130 },
   { key: 'status', defaultWidth: 110, minWidth: 100 },
   { key: 'amount', defaultWidth: 110, minWidth: 100 },
 ]
@@ -443,6 +451,16 @@ export default function Invoices() {
                       resizing={resizingKey === 'date_paid'}
                     />
                     <SortHeader
+                      label="Budget Month"
+                      active={sortKey === 'budget_month'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('budget_month')}
+                      className="hidden lg:table-cell"
+                      width={colWidths.budget_month}
+                      onResizeStart={startResize('budget_month')}
+                      resizing={resizingKey === 'budget_month'}
+                    />
+                    <SortHeader
                       label="Status"
                       active={sortKey === 'status'}
                       dir={sortDir}
@@ -496,6 +514,11 @@ export default function Invoices() {
                         ) : (
                           <span className="text-sm text-gray-400">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-4 hidden lg:table-cell">
+                        <span className={cn('text-sm', inv.budget_month ? 'text-gray-700' : 'text-gray-400')}>
+                          {formatBudgetMonth(inv.budget_month)}
+                        </span>
                       </td>
                       <td className="px-4 py-4">
                         <StatusBadge status={getEffectiveStatus(inv)} />
