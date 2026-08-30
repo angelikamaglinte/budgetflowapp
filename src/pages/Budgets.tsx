@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { BudgetCard } from '@/components/budgets/BudgetCard'
 import { BudgetForm } from '@/components/budgets/BudgetForm'
 import type { BudgetFormValues } from '@/components/budgets/BudgetForm'
+import { useAuth } from '@/contexts/AuthContext'
 import { useBudgets, useAddBudget, useUpdateBudget, useDeleteBudget } from '@/hooks/useBudgets'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
@@ -14,6 +15,7 @@ import { computeBudgetActual } from '@/lib/budgets'
 import type { BudgetCategory } from '@/types'
 
 export default function Budgets() {
+  const { user } = useAuth()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const { data: budgets = [], isLoading: loadingBudgets } = useBudgets()
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
@@ -47,7 +49,7 @@ export default function Budgets() {
     if (editTarget) {
       await updateBudget.mutateAsync({ id: editTarget.id, name: payload.name, monthly_target: payload.monthly_target })
     } else {
-      await addBudget.mutateAsync({ ...payload, sort_order: budgets.length })
+      await addBudget.mutateAsync({ ...payload, sort_order: budgets.length, user_id: user!.id })
     }
     setFormOpen(false)
     setEditTarget(null)
