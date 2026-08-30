@@ -1,157 +1,154 @@
 import { useMemo, useState } from 'react'
 import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
-import { ChevronLeft, ChevronRight, Plus, Target } from 'lucide-react'
+import { motion } from 'motion/react'
+import { ChevronLeft, ChevronRight, Receipt, Wallet, AlertCircle } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { Modal } from '@/components/ui/Modal'
-import { BudgetCard } from '@/components/budgets/BudgetCard'
-import { BudgetForm } from '@/components/budgets/BudgetForm'
-import type { BudgetFormValues } from '@/components/budgets/BudgetForm'
-import { useAuth } from '@/contexts/AuthContext'
-import { useBudgets, useAddBudget, useUpdateBudget, useDeleteBudget } from '@/hooks/useBudgets'
 import { useExpenses } from '@/hooks/useExpenses'
 import { useInvoices } from '@/hooks/useInvoices'
 import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
-import { computeBudgetActual } from '@/lib/budgets'
-import type { BudgetCategory } from '@/types'
+import { computeMonthlySummary } from '@/lib/budgets'
+import { getBucketStyle } from '@/lib/payoutBuckets'
+import { formatMoney } from '@/lib/savingsCalculator'
+import { cn, parseLocalDate } from '@/lib/utils'
 
 export default function Budgets() {
-  const { user } = useAuth()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
-  const { data: budgets = [], isLoading: loadingBudgets } = useBudgets()
   const { data: expenses = [], isLoading: loadingExp } = useExpenses()
   const { data: invoices = [], isLoading: loadingInv } = useInvoices()
-  const { data: buckets = [] } = usePayoutBuckets()
+  const { data: buckets = [], isLoading: loadingBuckets } = usePayoutBuckets()
 
-  const addBudget = useAddBudget()
-  const updateBudget = useUpdateBudget()
-  const deleteBudget = useDeleteBudget()
+  const summary = useMemo(
+    () => computeMonthlySummary(invoices, expenses, buckets, month),
+    [invoices, expenses, buckets, month]
+  )
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [editTarget, setEditTarget] = useState<BudgetCategory | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-
-  const actuals = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const budget of budgets) {
-      map.set(budget.id, computeBudgetActual(budget, expenses, invoices, buckets, month))
-    }
-    return map
-  }, [budgets, expenses, invoices, buckets, month])
-
-  async function handleSubmit(values: BudgetFormValues) {
-    const payload = {
-      name: values.name,
-      monthly_target: values.monthly_target,
-      source_type: values.source_type,
-      expense_category: values.source_type === 'expense' ? values.expense_category ?? null : null,
-      bucket_id: values.source_type === 'bucket' ? values.bucket_id ?? null : null,
-    }
-    if (editTarget) {
-      await updateBudget.mutateAsync({ id: editTarget.id, name: payload.name, monthly_target: payload.monthly_target })
-    } else {
-      await addBudget.mutateAsync({ ...payload, sort_order: budgets.length, user_id: user!.id })
-    }
-    setFormOpen(false)
-    setEditTarget(null)
-  }
-
-  async function handleDelete(id: string) {
-    await deleteBudget.mutateAsync(id)
-    setDeleteId(null)
-  }
-
-  const isLoading = loadingBudgets || loadingExp || loadingInv
+  const isLoading = loadingExp || loadingInv || loadingBuckets
 
   return (
-    <AppLayout title="Budgets" subtitle="Set a monthly spending limit for any category and track it live" showPeriodSelector={false}>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMonth((m) => subMonths(m, 1))}
-            className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 transition"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-medium text-gray-700 w-32 text-center">{format(month, 'MMMM yyyy')}</span>
-          <button
-            onClick={() => setMonth((m) => addMonths(m, 1))}
-            className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 transition"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
+    <AppLayout
+      title="Budgets"
+      subtitle="See exactly how each payment splits, and what's left after this month's expenses"
+      showPeriodSelector={false}
+    >
+      <div className="flex items-center gap-2 mb-6">
         <button
-          onClick={() => { setEditTarget(null); setFormOpen(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition"
+          onClick={() => setMonth((m) => subMonths(m, 1))}
+          className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 transition"
         >
-          <Plus className="w-4 h-4" />
-          Add Budget Category
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-medium text-gray-700 w-32 text-center">{format(month, 'MMMM yyyy')}</span>
+        <button
+          onClick={() => setMonth((m) => addMonths(m, 1))}
+          className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-gray-900 hover:border-gray-300 transition"
+        >
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl p-5 h-32 animate-pulse" />
           ))}
         </div>
-      ) : budgets.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col items-center justify-center py-16 gap-3">
-          <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center">
-            <Target className="w-6 h-6 text-primary-400" />
-          </div>
-          <p className="text-gray-500 text-sm">No budget categories yet</p>
-          <button
-            onClick={() => setFormOpen(true)}
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 transition"
-          >
-            Add your first one
-          </button>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {budgets.map((budget, i) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              actual={actuals.get(budget.id) ?? 0}
-              delay={i * 0.05}
-              onEdit={() => { setEditTarget(budget); setFormOpen(true) }}
-              onDelete={() => setDeleteId(budget.id)}
-            />
-          ))}
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Paid Invoices</h2>
+            {summary.invoiceSplits.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex flex-col items-center justify-center py-12 gap-2">
+                <Receipt className="w-6 h-6 text-gray-300" />
+                <p className="text-gray-500 text-sm">No invoices paid yet this month</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {summary.invoiceSplits.map(({ invoice, split }, i) => (
+                  <motion.div
+                    key={invoice.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: i * 0.05 }}
+                    className="bg-white rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.07)]"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{invoice.client_name}</p>
+                        <p className="text-xs text-gray-400">
+                          {invoice.invoice_number} · paid {format(parseLocalDate(invoice.date_paid!), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900 shrink-0">{formatMoney(invoice.amount)}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {split.map(({ bucket, amount }, j) => {
+                        const style = getBucketStyle(j)
+                        const Icon = style.icon
+                        return (
+                          <div key={bucket.id} className={cn('flex items-center gap-2.5 px-3 py-2 rounded-xl', style.iconBg)}>
+                            <Icon className={cn('w-3.5 h-3.5 shrink-0', style.iconColor)} />
+                            <p className="flex-1 min-w-0 text-sm text-gray-700 truncate">
+                              {bucket.name}{bucket.percentage != null ? ` (${bucket.percentage}%)` : ''}
+                            </p>
+                            <p className="text-sm font-semibold text-gray-900 shrink-0">{formatMoney(amount)}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Monthly Summary</h2>
+            {!summary.remainderBucket ? (
+              <div className="rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] flex items-start gap-2 p-5 text-sm text-[#C29343] bg-[#FAF3DD]">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>Set up a remainder bucket (like "Owner Pay") in Settings → Payout Buckets to see your monthly leftover here.</span>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.07)] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-gray-500">Total {summary.remainderBucket.name} this month</p>
+                  <p className="text-lg font-bold text-gray-900">{formatMoney(summary.remainderTotal)}</p>
+                </div>
+
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Expenses this month</p>
+                {summary.monthExpenses.length === 0 ? (
+                  <p className="text-sm text-gray-400 mb-4">No expenses logged yet</p>
+                ) : (
+                  <div className="flex flex-col gap-1.5 mb-4 max-h-72 overflow-y-auto">
+                    {summary.monthExpenses.map((expense) => (
+                      <div key={expense.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50">
+                        <div className="min-w-0">
+                          <p className="text-sm text-gray-700 truncate">{expense.title}</p>
+                          <p className="text-xs text-gray-400">{expense.category} · {expense.type}</p>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 shrink-0">{formatMoney(expense.amount)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-xs text-gray-400">− {formatMoney(summary.monthExpensesTotal)} in expenses</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Wallet className={cn('w-4 h-4', summary.leftover >= 0 ? 'text-[#548164]' : 'text-[#C4554D]')} />
+                    <p className="text-sm font-medium text-gray-900">Left over</p>
+                  </div>
+                  <p className={cn('text-xl font-bold', summary.leftover >= 0 ? 'text-[#548164]' : 'text-[#C4554D]')}>
+                    {formatMoney(summary.leftover)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      <BudgetForm
-        open={formOpen}
-        onClose={() => { setFormOpen(false); setEditTarget(null) }}
-        onSubmit={handleSubmit}
-        initial={editTarget ?? undefined}
-        buckets={buckets}
-      />
-
-      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} maxWidth="max-w-sm">
-        <div className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-2">Delete budget category?</h3>
-          <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setDeleteId(null)}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => deleteId && void handleDelete(deleteId)}
-              className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
     </AppLayout>
   )
 }

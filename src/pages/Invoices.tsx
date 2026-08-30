@@ -20,6 +20,8 @@ import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
 import { useAuth } from '@/contexts/AuthContext'
 import { exportInvoices } from '@/lib/export'
 import { getEffectiveStatus } from '@/lib/invoiceStatus'
+import { computeBucketSplit } from '@/lib/payoutBuckets'
+import { formatMoney } from '@/lib/savingsCalculator'
 import type { Invoice } from '@/types'
 import { usePeriod, matchesPeriod } from '@/contexts/PeriodContext'
 import { cn, parseLocalDate } from '@/lib/utils'
@@ -216,10 +218,12 @@ export default function Invoices() {
       date_paid: new Date().toISOString().split('T')[0],
     })
     setTransferChecklistInvoice(inv)
+    const split = computeBucketSplit(inv.amount, buckets)
+    const breakdown = split.map((s) => `${s.bucket.name} ${formatMoney(s.amount)}`).join(' · ')
     void addNotification.mutateAsync({
       user_id: user!.id,
-      message: `Invoice ${inv.invoice_number} marked paid — see your payout breakdown.`,
-      link: '/invoices',
+      message: `💰 Invoice ${inv.invoice_number} (${inv.client_name}) paid — ${formatMoney(inv.amount)}. ${breakdown}`,
+      link: '/budgets',
     })
   }
 
