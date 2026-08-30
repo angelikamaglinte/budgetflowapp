@@ -360,7 +360,7 @@ export default function Expenses() {
                     </div>
                     <span className="text-sm font-semibold text-gray-900 shrink-0 text-right">
                       ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      {exp.tax_rate != null && <span className="block text-xs font-normal text-gray-400">+GST</span>}
+                      {!!exp.tax_rate && <span className="block text-xs font-normal text-gray-400">+GST</span>}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -469,7 +469,7 @@ export default function Expenses() {
                         <span className="text-sm font-semibold text-gray-900">
                           ${exp.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
-                        {exp.tax_rate != null && <p className="text-xs text-gray-400">+GST</p>}
+                        {!!exp.tax_rate && <p className="text-xs text-gray-400">+GST</p>}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
