@@ -56,9 +56,9 @@ export default function Onboarding() {
       })
       // Seeds a working payout split so new users land on the Dashboard
       // with something already set up — full editing lives in Settings.
-      await addBucket.mutateAsync({ name: 'Tax Reserve', percentage: values.tax_rate, sort_order: 0 })
-      await addBucket.mutateAsync({ name: 'Savings', percentage: values.savings_rate, sort_order: 1 })
-      await addBucket.mutateAsync({ name: 'Owner Pay', percentage: null, sort_order: 2 })
+      await addBucket.mutateAsync({ name: 'Tax Reserve', percentage: values.tax_rate, sort_order: 0, user_id: user!.id })
+      await addBucket.mutateAsync({ name: 'Savings', percentage: values.savings_rate, sort_order: 1, user_id: user!.id })
+      await addBucket.mutateAsync({ name: 'Owner Pay', percentage: null, sort_order: 2, user_id: user!.id })
       void navigate('/dashboard')
     } finally {
       setSaving(false)
