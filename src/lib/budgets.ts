@@ -1,60 +1,69 @@
 import { startOfMonth, endOfMonth } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
 import { computeBucketSplit } from '@/lib/payoutBuckets'
-import type { BudgetCategory, Expense, Invoice, PayoutBucket } from '@/types'
+import type { BucketSplitEntry } from '@/lib/payoutBuckets'
+import type { Expense, Invoice, PayoutBucket } from '@/types'
 
-// source_type === 'expense' sums matching expenses in the month; 'bucket'
-// re-runs the same per-invoice split shown on the Dashboard and sums the
-// target bucket's share across every invoice paid within the month.
-export function computeBudgetActual(
-  budget: BudgetCategory,
-  expenses: Expense[],
+export interface InvoiceSplit {
+  invoice: Invoice
+  split: BucketSplitEntry[]
+}
+
+export interface MonthlySummary {
+  invoiceSplits: InvoiceSplit[]
+  remainderBucket: PayoutBucket | null
+  remainderTotal: number
+  monthExpenses: Expense[]
+  monthExpensesTotal: number
+  leftover: number
+}
+
+// Everything here reflects what's already happened this month — no
+// projections. "Owner Pay" is whichever bucket is the remainder
+// (percentage === null); every expense this month reduces it, business
+// and personal alike, since both are real cash leaving the same pool of
+// money (a separate question from what reduces taxable income on the Tax tab).
+export function computeMonthlySummary(
   invoices: Invoice[],
+  expenses: Expense[],
   buckets: PayoutBucket[],
   monthDate: Date
-): number {
+): MonthlySummary {
   const start = startOfMonth(monthDate)
   const end = endOfMonth(monthDate)
 
-  if (budget.source_type === 'expense') {
-    return expenses
-      .filter((e) => e.category === budget.expense_category)
-      .filter((e) => {
-        const d = parseLocalDate(e.date)
-        return d >= start && d <= end
-      })
-      .reduce((sum, e) => sum + e.amount, 0)
-  }
-
-  if (!budget.bucket_id) return 0
-
-  return invoices
+  const paidInvoices = invoices
     .filter((inv) => inv.status === 'paid' && inv.date_paid)
     .filter((inv) => {
       const d = parseLocalDate(inv.date_paid!)
       return d >= start && d <= end
     })
-    .reduce((sum, inv) => {
-      const split = computeBucketSplit(inv.amount, buckets)
-      const entry = split.find((s) => s.bucket.id === budget.bucket_id)
-      return sum + (entry?.amount ?? 0)
-    }, 0)
-}
 
-export interface BudgetProgress {
-  actual: number
-  remaining: number
-  percentUsed: number
-  status: 'ok' | 'warning' | 'over'
-}
+  const invoiceSplits: InvoiceSplit[] = paidInvoices.map((invoice) => ({
+    invoice,
+    split: computeBucketSplit(invoice.amount, buckets),
+  }))
 
-export function computeBudgetProgress(target: number, actual: number): BudgetProgress {
-  const percentUsed = target > 0 ? (actual / target) * 100 : 0
-  const status: BudgetProgress['status'] = actual > target ? 'over' : percentUsed >= 80 ? 'warning' : 'ok'
+  const remainderBucket = buckets.find((b) => b.percentage == null) ?? null
+  const remainderTotal = remainderBucket
+    ? invoiceSplits.reduce((sum, { split }) => {
+        const entry = split.find((s) => s.bucket.id === remainderBucket.id)
+        return sum + (entry?.amount ?? 0)
+      }, 0)
+    : 0
+
+  const monthExpenses = expenses.filter((e) => {
+    const d = parseLocalDate(e.date)
+    return d >= start && d <= end
+  })
+  const monthExpensesTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0)
+
   return {
-    actual,
-    remaining: target - actual,
-    percentUsed,
-    status,
+    invoiceSplits,
+    remainderBucket,
+    remainderTotal,
+    monthExpenses,
+    monthExpensesTotal,
+    leftover: remainderTotal - monthExpensesTotal,
   }
 }
