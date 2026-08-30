@@ -3,6 +3,7 @@ import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { Plus, Trash2, AlertCircle, Check } from 'lucide-react'
 import { motion } from 'motion/react'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { useAuth } from '@/contexts/AuthContext'
 import { usePayoutBuckets, useAddBucket, useUpdateBucket, useDeleteBucket } from '@/hooks/usePayoutBuckets'
 import { getBucketStyle } from '@/lib/payoutBuckets'
 
@@ -31,6 +32,7 @@ interface PayoutBucketsEditorProps {
 }
 
 export function PayoutBucketsEditor({ defaultTaxRate, defaultSavingsRate }: PayoutBucketsEditorProps) {
+  const { user } = useAuth()
   const { data: buckets = [], isLoading } = usePayoutBuckets()
   const addBucket = useAddBucket()
   const updateBucket = useUpdateBucket()
@@ -62,9 +64,9 @@ export function PayoutBucketsEditor({ defaultTaxRate, defaultSavingsRate }: Payo
     setSeeding(true)
     setSaveError(null)
     try {
-      await addBucket.mutateAsync({ name: 'Tax Reserve', percentage: defaultTaxRate, sort_order: 0 })
-      await addBucket.mutateAsync({ name: 'Savings', percentage: defaultSavingsRate, sort_order: 1 })
-      await addBucket.mutateAsync({ name: 'Owner Pay', percentage: null, sort_order: 2 })
+      await addBucket.mutateAsync({ name: 'Tax Reserve', percentage: defaultTaxRate, sort_order: 0, user_id: user!.id })
+      await addBucket.mutateAsync({ name: 'Savings', percentage: defaultSavingsRate, sort_order: 1, user_id: user!.id })
+      await addBucket.mutateAsync({ name: 'Owner Pay', percentage: null, sort_order: 2, user_id: user!.id })
     } finally {
       setSeeding(false)
     }
@@ -105,7 +107,7 @@ export function PayoutBucketsEditor({ defaultTaxRate, defaultSavingsRate }: Payo
       if (row.id) {
         await updateBucket.mutateAsync({ id: row.id, name: row.name.trim(), percentage, sort_order: i })
       } else {
-        await addBucket.mutateAsync({ name: row.name.trim(), percentage, sort_order: i })
+        await addBucket.mutateAsync({ name: row.name.trim(), percentage, sort_order: i, user_id: user!.id })
       }
     }
 
