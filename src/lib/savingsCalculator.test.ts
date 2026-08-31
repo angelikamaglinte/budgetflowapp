@@ -64,6 +64,17 @@ describe('computeMonthlyAverages', () => {
     expect(result.avgMonthlyExpenses).toBe(200)
   })
 
+  it('backs out GST/HST before averaging invoice income', () => {
+    const invoices = [
+      makeInvoice({ id: 'i1', amount: 1050, tax_rate: 5, date_paid: '2026-07-10' }),
+    ]
+
+    const result = computeMonthlyAverages([], invoices, TODAY)
+
+    // $1050 gross at 5% GST -> $1000 pre-tax, averaged over 1 month of data
+    expect(result.avgMonthlyIncome).toBeCloseTo(1000, 5)
+  })
+
   it('excludes the current, still-in-progress month', () => {
     const invoices = [makeInvoice({ date_paid: '2026-08-10' })]
     const expenses = [makeExpense({ date: '2026-08-05' })]
