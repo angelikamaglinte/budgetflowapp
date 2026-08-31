@@ -4,6 +4,7 @@ import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'motion/react'
+import { format } from 'date-fns'
 import { Check, Pencil } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
@@ -12,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useBusinessProfile, useSaveBusinessProfile } from '@/hooks/useBusinessProfile'
 import { PROVINCE_LABELS } from '@/lib/canadianTax'
 import type { ProvinceCode } from '@/lib/canadianTax'
-import { cn } from '@/lib/utils'
+import { cn, parseLocalDate } from '@/lib/utils'
 
 const settingsSchema = z.object({
   business_name: z.string().optional(),
@@ -22,6 +23,8 @@ const settingsSchema = z.object({
   province: z.string().optional(),
   gst_registered: z.boolean().optional(),
   gst_rate: z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').optional(),
+  gst_business_number: z.string().optional(),
+  gst_registration_date: z.string().optional(),
   tuition_credit_remaining: z.coerce.number().min(0, 'Must be 0 or more').optional(),
 })
 
@@ -65,6 +68,8 @@ export default function Settings() {
       province: '',
       gst_registered: false,
       gst_rate: '' as unknown as number,
+      gst_business_number: '',
+      gst_registration_date: '',
       tuition_credit_remaining: '' as unknown as number,
     },
   })
@@ -80,6 +85,8 @@ export default function Settings() {
       province: profile?.province ?? '',
       gst_registered: profile?.gst_registered ?? false,
       gst_rate: profile?.gst_rate ?? ('' as unknown as number),
+      gst_business_number: profile?.gst_business_number ?? '',
+      gst_registration_date: profile?.gst_registration_date ?? '',
       tuition_credit_remaining: profile?.tuition_credit_remaining ?? ('' as unknown as number),
     })
   }
@@ -100,6 +107,8 @@ export default function Settings() {
       province: values.province || null,
       gst_registered: values.gst_registered ?? false,
       gst_rate: values.gst_registered ? (values.gst_rate ?? null) : null,
+      gst_business_number: values.gst_registered ? (values.gst_business_number || null) : null,
+      gst_registration_date: values.gst_registered ? (values.gst_registration_date || null) : null,
       tuition_credit_remaining: values.tuition_credit_remaining ?? null,
       onboarding_completed: true,
     })
@@ -115,6 +124,9 @@ export default function Settings() {
   const gstSummary = profile?.gst_registered
     ? `Registered${profile.gst_rate != null ? ` · ${profile.gst_rate}% default rate` : ''}`
     : 'Not registered'
+  const gstRegisteredSince = profile?.gst_registration_date
+    ? format(parseLocalDate(profile.gst_registration_date), 'MMMM d, yyyy')
+    : null
   const tuitionSummary =
     profile?.tuition_credit_remaining != null && profile.tuition_credit_remaining > 0
       ? `$${profile.tuition_credit_remaining.toLocaleString()} remaining`
@@ -160,6 +172,12 @@ export default function Settings() {
                   />
                   <DetailField label="Address" value={profile?.address} multiline className="sm:col-span-2" />
                   <DetailField label="GST/HST" value={gstSummary} />
+                  {profile?.gst_registered && (
+                    <>
+                      <DetailField label="GST Business Number" value={profile.gst_business_number} />
+                      <DetailField label="GST Registered Since" value={gstRegisteredSince} />
+                    </>
+                  )}
                   <DetailField label="Federal Tuition Credit" value={tuitionSummary} />
                 </motion.div>
               ) : (
@@ -231,17 +249,37 @@ export default function Settings() {
                       I'm registered for GST/HST
                     </label>
                     {gstRegistered && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <input
-                          {...register('gst_rate')}
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          placeholder="e.g. 5"
-                          className="w-24 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        />
-                        <span className="text-sm text-gray-500">% default rate for new invoices</span>
+                      <div className="mt-2 flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            {...register('gst_rate')}
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="e.g. 5"
+                            className="w-24 px-3 py-2 rounded-xl border border-gray-200 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                          <span className="text-sm text-gray-500">% default rate for new invoices</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">GST Business Number</label>
+                            <input
+                              {...register('gst_business_number')}
+                              placeholder="e.g. 123456789RT0001"
+                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">GST Registered Since</label>
+                            <input
+                              {...register('gst_registration_date')}
+                              type="date"
+                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
                       </div>
                     )}
                     {errors.gst_rate && <p className="mt-1 text-xs text-red-600">{errors.gst_rate.message}</p>}
