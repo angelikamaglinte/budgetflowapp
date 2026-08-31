@@ -15,6 +15,11 @@ import { usePayoutBuckets } from '@/hooks/usePayoutBuckets'
 import { usePeriod, matchesPeriod, periodLabel } from '@/contexts/PeriodContext'
 import { getDueReminders } from '@/lib/reminders'
 import { computeBucketSplit, getBucketStyle } from '@/lib/payoutBuckets'
+import { backOutTax } from '@/lib/canadianTax'
+
+function preTaxAmount(amount: number, taxRate: number | null): number {
+  return taxRate ? backOutTax(amount, taxRate).subtotal : amount
+}
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -32,12 +37,14 @@ export default function Dashboard() {
     const filteredInv = invoices.filter((inv) => matchesPeriod(inv.date_paid ?? inv.issue_date, periodFilter))
 
     const totalExpenses = filteredExp.reduce((sum, e) => sum + e.amount, 0)
+    // GST/HST collected isn't real income — it's held for the CRA — so it's
+    // backed out here the same way Budgets and the Tax tab already do.
     const totalIncome = filteredInv
       .filter((inv) => inv.status === 'paid')
-      .reduce((sum, inv) => sum + inv.amount, 0)
+      .reduce((sum, inv) => sum + preTaxAmount(inv.amount, inv.tax_rate), 0)
     const pending = invoices
       .filter((inv) => inv.status === 'pending')
-      .reduce((sum, inv) => sum + inv.amount, 0)
+      .reduce((sum, inv) => sum + preTaxAmount(inv.amount, inv.tax_rate), 0)
     const netProfit = totalIncome - totalExpenses
 
     return { totalExpenses, totalIncome, pending, netProfit }

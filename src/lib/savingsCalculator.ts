@@ -1,5 +1,6 @@
 import { subMonths, startOfMonth, endOfMonth, differenceInCalendarMonths, addMonths } from 'date-fns'
 import { parseLocalDate } from '@/lib/utils'
+import { backOutTax } from '@/lib/canadianTax'
 import type { Expense, Invoice, PurchasePlan } from '@/types'
 
 export const CALCULATOR_LOOKBACK_MONTHS = 3
@@ -26,13 +27,15 @@ export function computeMonthlyAverages(
     const start = startOfMonth(monthDate)
     const end = endOfMonth(monthDate)
 
+    // GST/HST collected isn't real income — it's held for the CRA — so it's
+    // backed out here the same way Dashboard and Budgets already do.
     const monthIncome = invoices
       .filter((inv) => inv.status === 'paid' && inv.date_paid)
       .filter((inv) => {
         const d = parseLocalDate(inv.date_paid!)
         return d >= start && d <= end
       })
-      .reduce((s, inv) => s + inv.amount, 0)
+      .reduce((s, inv) => s + (inv.tax_rate ? backOutTax(inv.amount, inv.tax_rate).subtotal : inv.amount), 0)
 
     const monthExpenses = expenses
       .filter((e) => {
