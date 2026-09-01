@@ -233,13 +233,22 @@ export default function Invoices() {
     })
     setTransferChecklistInvoice(inv)
     setMarkedBudgetMonth(budgetMonth)
-    const split = computeBucketSplit(inv.amount, buckets)
-    const breakdown = split.map((s) => `${s.bucket.name} ${formatMoney(s.amount)}`).join(' · ')
-    void addNotification.mutateAsync({
-      user_id: user!.id,
-      message: `💰 Invoice ${inv.invoice_number} (${inv.client_name}) paid — ${formatMoney(inv.amount)}. Counted toward ${periodLabel(budgetMonth)}. ${breakdown}`,
-      link: '/budgets',
-    })
+    // Notification fires on close, not here — sending it immediately would
+    // bake in this just-applied default before she's had a chance to correct
+    // the month in the checklist modal below.
+  }
+
+  function closeTransferChecklist() {
+    if (transferChecklistInvoice) {
+      const split = computeBucketSplit(transferChecklistInvoice.amount, buckets)
+      const breakdown = split.map((s) => `${s.bucket.name} ${formatMoney(s.amount)}`).join(' · ')
+      void addNotification.mutateAsync({
+        user_id: user!.id,
+        message: `💰 Invoice ${transferChecklistInvoice.invoice_number} (${transferChecklistInvoice.client_name}) paid — ${formatMoney(transferChecklistInvoice.amount)}. Counted toward ${periodLabel(markedBudgetMonth)}. ${breakdown}`,
+        link: '/budgets',
+      })
+    }
+    setTransferChecklistInvoice(null)
   }
 
   async function handleDelete(id: string) {
@@ -598,7 +607,7 @@ export default function Invoices() {
       {transferChecklistInvoice && (
         <TransferChecklistModal
           open={!!transferChecklistInvoice}
-          onClose={() => setTransferChecklistInvoice(null)}
+          onClose={closeTransferChecklist}
           invoiceNumber={transferChecklistInvoice.invoice_number}
           amount={transferChecklistInvoice.amount}
           buckets={buckets}
