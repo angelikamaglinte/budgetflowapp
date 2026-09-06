@@ -54,6 +54,15 @@ export function ExpenseForm({ open, onClose, onSubmit, initial, defaultGstRate }
 
   const currentType = useWatch({ control, name: 'type' })
 
+  // The GST/HST field is hidden for Personal since ITCs never apply there —
+  // but hiding it doesn't clear whatever value it already held (e.g. the
+  // default rate prefilled for a new expense), so it was silently saving a
+  // stray rate anyway. Clearing it the moment Personal is selected closes
+  // that gap regardless of how the value got there.
+  useEffect(() => {
+    if (currentType === 'personal') setValue('tax_rate', null)
+  }, [currentType, setValue])
+
   useEffect(() => {
     if (open) {
       reset({
