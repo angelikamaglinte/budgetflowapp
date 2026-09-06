@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { format, subMonths } from 'date-fns'
 import { CalendarDays, ChevronDown, Menu, TrendingUp } from 'lucide-react'
@@ -48,6 +48,7 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
   const { periodFilter, setPeriodFilter } = usePeriod()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false)
+  const periodMenuActionsRef = useRef<{ unmount: () => void; close: () => void }>(null)
   const [rangeStart, setRangeStart] = useState('')
   const [rangeEnd, setRangeEnd] = useState('')
   const rangeValid = !!rangeStart && !!rangeEnd && rangeStart <= rangeEnd
@@ -82,7 +83,7 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
 
             {/* Global period selector */}
             {showPeriodSelector && (
-              <DropdownMenu open={periodMenuOpen} onOpenChange={setPeriodMenuOpen}>
+              <DropdownMenu actionsRef={periodMenuActionsRef} onOpenChange={setPeriodMenuOpen}>
                 <DropdownMenuTrigger
                   render={
                     <button
@@ -148,7 +149,7 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
                       disabled={!rangeValid}
                       onClick={() => {
                         setPeriodFilter(`range:${rangeStart}:${rangeEnd}`)
-                        setPeriodMenuOpen(false)
+                        periodMenuActionsRef.current?.close()
                       }}
                       className="w-full py-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition"
                     >
