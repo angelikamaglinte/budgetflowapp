@@ -30,7 +30,7 @@ export function DayOfMonthPicker({ value, onChange }: DayOfMonthPickerProps) {
         render={
           <button
             type="button"
-            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full flex items-center justify-between pl-3 pr-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         }
       >
