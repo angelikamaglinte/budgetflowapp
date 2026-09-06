@@ -48,6 +48,9 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
   const { periodFilter, setPeriodFilter } = usePeriod()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false)
+  const [rangeStart, setRangeStart] = useState('')
+  const [rangeEnd, setRangeEnd] = useState('')
+  const rangeValid = !!rangeStart && !!rangeEnd && rangeStart <= rangeEnd
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-secondary">
@@ -79,12 +82,12 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
 
             {/* Global period selector */}
             {showPeriodSelector && (
-              <DropdownMenu onOpenChange={setPeriodMenuOpen}>
+              <DropdownMenu open={periodMenuOpen} onOpenChange={setPeriodMenuOpen}>
                 <DropdownMenuTrigger
                   render={
                     <button
                       type="button"
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 hover:border-gray-300 transition shrink-0"
+                      className="flex items-center gap-2 pl-3 pr-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 hover:border-gray-300 transition shrink-0"
                     />
                   }
                 >
@@ -122,6 +125,36 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Custom Range</DropdownMenuLabel>
+                  <div className="px-1.5 py-1 flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="date"
+                        value={rangeStart}
+                        onChange={(e) => setRangeStart(e.target.value)}
+                        className="flex-1 min-w-0 px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      <span className="text-xs text-gray-400 shrink-0">to</span>
+                      <input
+                        type="date"
+                        value={rangeEnd}
+                        onChange={(e) => setRangeEnd(e.target.value)}
+                        className="flex-1 min-w-0 px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!rangeValid}
+                      onClick={() => {
+                        setPeriodFilter(`range:${rangeStart}:${rangeEnd}`)
+                        setPeriodMenuOpen(false)
+                      }}
+                      className="w-full py-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium transition"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
