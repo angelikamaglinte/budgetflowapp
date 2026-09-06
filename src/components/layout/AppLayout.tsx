@@ -127,7 +127,10 @@ export function AppLayout({ children, title, subtitle, action, showPeriodSelecto
                     ))}
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Custom Range</DropdownMenuLabel>
+                  {/* Plain element, not DropdownMenuLabel — that requires a
+                      Menu.Group/RadioGroup ancestor for its context, which
+                      this section (outside the radio group above) doesn't have. */}
+                  <p className="px-1.5 py-1 text-xs font-medium text-gray-400">Custom Range</p>
                   <div className="px-1.5 py-1 flex flex-col gap-2">
                     <div className="flex items-center gap-1.5">
                       <input
