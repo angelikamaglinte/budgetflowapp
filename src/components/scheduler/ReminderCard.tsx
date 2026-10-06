@@ -1,12 +1,7 @@
 import { motion } from 'motion/react'
 import { Pencil, Trash2, CalendarClock } from 'lucide-react'
 import type { InvoiceReminder } from '@/types'
-
-function ordinal(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd']
-  const v = n % 100
-  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
-}
+import { describeRRule } from '@/lib/recurrence'
 
 interface ReminderCardProps {
   reminder: InvoiceReminder
@@ -43,7 +38,7 @@ export function ReminderCard({ reminder, delay = 0, onEdit, onDelete }: Reminder
       </div>
       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#E9F3F7] text-[#487CA5] mb-2">
         <CalendarClock className="w-3.5 h-3.5" />
-        {ordinal(reminder.reminder_day)} of every month
+        {reminder.anchor_date ? describeRRule(reminder.recurrence_rule, reminder.anchor_date) : 'Not set up yet'}
       </div>
       {reminder.notes && <p className="text-xs text-gray-400">{reminder.notes}</p>}
     </motion.div>

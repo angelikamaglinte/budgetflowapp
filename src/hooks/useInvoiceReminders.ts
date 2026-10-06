@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { periodKey } from '@/lib/reminders'
 import type { InvoiceReminder, InvoiceReminderInsert, InvoiceReminderUpdate } from '@/types'
 
 export function useInvoiceReminders() {
@@ -69,10 +68,10 @@ export function useDeleteInvoiceReminder() {
 export function useDismissInvoiceReminder() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, occurrenceDate }: { id: string; occurrenceDate: string }) => {
       const { error } = await supabase
         .from('invoice_reminders')
-        .update({ dismissed_period: periodKey(new Date()) })
+        .update({ dismissed_occurrence_date: occurrenceDate })
         .eq('id', id)
       if (error) throw error
     },

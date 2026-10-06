@@ -1,30 +1,34 @@
-import { getDaysInMonth, format, startOfDay, endOfDay } from 'date-fns'
+import { format } from 'date-fns'
+import { getOccurrences, getCurrentPeriodStart } from '@/lib/recurrence'
 import type { InvoiceReminder } from '@/types'
-
-export function periodKey(date: Date): string {
-  return format(date, 'yyyy-MM')
-}
-
-// Reminder day is 1-31; months with fewer days fall back to their last day
-// (e.g. a day-31 reminder lands on Feb 28/29).
-export function effectiveDayForMonth(reminderDay: number, monthDate: Date): number {
-  return Math.min(reminderDay, getDaysInMonth(monthDate))
-}
 
 export interface DueReminder {
   reminder: InvoiceReminder
   dueDate: Date
 }
 
+// A reminder is "due" when it has an occurrence, within its own current
+// cycle (this month for a monthly rule, this week for a weekly one, etc.),
+// on or before today that hasn't already been dismissed. Scoping the
+// lookback to the rule's own cycle (instead of a flat N days) means a stale
+// un-dismissed occurrence from a previous cycle doesn't keep nagging once a
+// new one has started — same spirit as the old day-of-month behavior, now
+// correct for any recurrence rule. Dismissing only suppresses that one
+// occurrence's exact date, not the whole cycle.
 export function getDueReminders(reminders: InvoiceReminder[], today: Date = new Date()): DueReminder[] {
-  const thisPeriod = periodKey(today)
-  return reminders
-    .filter((r) => r.dismissed_period !== thisPeriod)
-    .filter((r) => today.getDate() >= effectiveDayForMonth(r.reminder_day, today))
-    .map((r) => ({
-      reminder: r,
-      dueDate: new Date(today.getFullYear(), today.getMonth(), effectiveDayForMonth(r.reminder_day, today)),
-    }))
+  const result: DueReminder[] = []
+
+  for (const r of reminders) {
+    if (!r.anchor_date) continue
+    const periodStart = getCurrentPeriodStart(r.recurrence_rule, today)
+    const occurrences = getOccurrences(r.recurrence_rule, r.anchor_date, periodStart, today)
+    const mostRecent = occurrences[occurrences.length - 1]
+    if (!mostRecent) continue
+    if (r.dismissed_occurrence_date === format(mostRecent, 'yyyy-MM-dd')) continue
+    result.push({ reminder: r, dueDate: mostRecent })
+  }
+
+  return result
 }
 
 export interface ReminderOccurrence {
@@ -32,29 +36,18 @@ export interface ReminderOccurrence {
   date: Date
 }
 
-// One occurrence per reminder per calendar month touched by [rangeStart, rangeEnd].
+// Every occurrence, for every reminder, that falls within [rangeStart, rangeEnd].
 export function getReminderOccurrences(
   reminders: InvoiceReminder[],
   rangeStart: Date,
   rangeEnd: Date
 ): ReminderOccurrence[] {
-  const start = startOfDay(rangeStart)
-  const end = endOfDay(rangeEnd)
   const occurrences: ReminderOccurrence[] = []
-
-  let cursor = new Date(start.getFullYear(), start.getMonth(), 1)
-  const endCursor = new Date(end.getFullYear(), end.getMonth(), 1)
-
-  while (cursor <= endCursor) {
-    for (const r of reminders) {
-      const day = effectiveDayForMonth(r.reminder_day, cursor)
-      const date = new Date(cursor.getFullYear(), cursor.getMonth(), day)
-      if (date >= start && date <= end) {
-        occurrences.push({ reminder: r, date })
-      }
+  for (const r of reminders) {
+    if (!r.anchor_date) continue
+    for (const date of getOccurrences(r.recurrence_rule, r.anchor_date, rangeStart, rangeEnd)) {
+      occurrences.push({ reminder: r, date })
     }
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
   }
-
   return occurrences
 }
