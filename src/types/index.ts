@@ -23,6 +23,9 @@ export type Task = Database['public']['Tables']['tasks']['Row']
 export type TaskInsert = Database['public']['Tables']['tasks']['Insert']
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update']
 
+export type TaskCompletion = Database['public']['Tables']['task_completions']['Row']
+export type TaskCompletionInsert = Database['public']['Tables']['task_completions']['Insert']
+
 export type PayoutBucket = Database['public']['Tables']['payout_buckets']['Row']
 export type PayoutBucketInsert = Database['public']['Tables']['payout_buckets']['Insert']
 export type PayoutBucketUpdate = Database['public']['Tables']['payout_buckets']['Update']

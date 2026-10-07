@@ -427,27 +427,36 @@ export interface Database {
           id: string
           user_id: string
           client_name: string
-          reminder_day: number
+          reminder_day: number | null
           notes: string | null
           dismissed_period: string | null
+          recurrence_rule: string | null
+          anchor_date: string | null
+          dismissed_occurrence_date: string | null
           created_at: string
         }
         Insert: {
           id?: string
           user_id?: string
           client_name: string
-          reminder_day: number
+          reminder_day?: number | null
           notes?: string | null
           dismissed_period?: string | null
+          recurrence_rule?: string | null
+          anchor_date?: string | null
+          dismissed_occurrence_date?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           client_name?: string
-          reminder_day?: number
+          reminder_day?: number | null
           notes?: string | null
           dismissed_period?: string | null
+          recurrence_rule?: string | null
+          anchor_date?: string | null
+          dismissed_occurrence_date?: string | null
           created_at?: string
         }
       }
@@ -483,6 +492,11 @@ export interface Database {
           user_id: string
           title: string
           due_date: string | null
+          due_time: string | null
+          all_day: boolean
+          recurrence_rule: string | null
+          link_url: string | null
+          description: string | null
           completed: boolean
           created_at: string
         }
@@ -491,6 +505,11 @@ export interface Database {
           user_id?: string
           title: string
           due_date?: string | null
+          due_time?: string | null
+          all_day?: boolean
+          recurrence_rule?: string | null
+          link_url?: string | null
+          description?: string | null
           completed?: boolean
           created_at?: string
         }
@@ -499,8 +518,36 @@ export interface Database {
           user_id?: string
           title?: string
           due_date?: string | null
+          due_time?: string | null
+          all_day?: boolean
+          recurrence_rule?: string | null
+          link_url?: string | null
+          description?: string | null
           completed?: boolean
           created_at?: string
+        }
+      }
+      task_completions: {
+        Row: {
+          id: string
+          task_id: string
+          user_id: string
+          occurrence_date: string
+          completed_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          user_id?: string
+          occurrence_date: string
+          completed_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          user_id?: string
+          occurrence_date?: string
+          completed_at?: string
         }
       }
       payout_buckets: {

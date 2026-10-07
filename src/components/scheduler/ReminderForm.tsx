@@ -7,11 +7,12 @@ import { X } from 'lucide-react'
 import type { InvoiceReminder } from '@/types'
 import { Modal } from '@/components/ui/Modal'
 import { useContacts } from '@/hooks/useContacts'
-import { DayOfMonthPicker } from './DayOfMonthPicker'
+import { RepeatPicker } from '@/components/scheduling/RepeatPicker'
 
 const reminderSchema = z.object({
   client_name: z.string().min(1, 'Client name is required'),
-  reminder_day: z.coerce.number().int().min(1, 'Day must be between 1 and 31').max(31, 'Day must be between 1 and 31'),
+  anchor_date: z.string().min(1, 'Start date is required'),
+  recurrence_rule: z.string().nullable(),
   notes: z.string().optional(),
 })
 
@@ -24,27 +25,28 @@ interface ReminderFormProps {
   initial?: InvoiceReminder
 }
 
+function defaultValues(initial?: InvoiceReminder): ReminderFormValues {
+  const today = new Date().toISOString().split('T')[0]
+  return {
+    client_name: initial?.client_name ?? '',
+    anchor_date: initial?.anchor_date ?? today,
+    recurrence_rule: initial?.recurrence_rule ?? null,
+    notes: initial?.notes ?? '',
+  }
+}
+
 export function ReminderForm({ open, onClose, onSubmit, initial }: ReminderFormProps) {
   const { data: contacts = [] } = useContacts()
   const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm<ReminderFormValues>({
     resolver: zodResolver(reminderSchema) as Resolver<ReminderFormValues>,
-    defaultValues: {
-      client_name: '',
-      reminder_day: '' as unknown as number,
-      notes: '',
-    },
+    defaultValues: defaultValues(initial),
   })
 
-  const watchedDay = useWatch({ control, name: 'reminder_day' })
+  const anchorDate = useWatch({ control, name: 'anchor_date' })
+  const recurrenceRule = useWatch({ control, name: 'recurrence_rule' })
 
   useEffect(() => {
-    if (open) {
-      reset({
-        client_name: initial?.client_name ?? '',
-        reminder_day: initial?.reminder_day ?? ('' as unknown as number),
-        notes: initial?.notes ?? '',
-      })
-    }
+    if (open) reset(defaultValues(initial))
   }, [open, initial, reset])
 
   return (
@@ -74,13 +76,22 @@ export function ReminderForm({ open, onClose, onSubmit, initial }: ReminderFormP
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Remind me on day</label>
-          <DayOfMonthPicker
-            value={watchedDay || undefined}
-            onChange={(day) => setValue('reminder_day', day, { shouldValidate: true })}
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Starting</label>
+          <input
+            {...register('anchor_date')}
+            type="date"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
-          <input type="hidden" {...register('reminder_day')} />
-          {errors.reminder_day && <p className="mt-1 text-xs text-red-600">{errors.reminder_day.message}</p>}
+          {errors.anchor_date && <p className="mt-1 text-xs text-red-600">{errors.anchor_date.message}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Repeat</label>
+          <RepeatPicker
+            value={recurrenceRule}
+            onChange={(rule) => setValue('recurrence_rule', rule)}
+            startDate={anchorDate || new Date().toISOString().split('T')[0]}
+          />
         </div>
 
         <div>

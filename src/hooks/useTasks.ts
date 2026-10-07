@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Task, TaskInsert, TaskUpdate } from '@/types'
+import type { Task, TaskInsert, TaskUpdate, TaskCompletion } from '@/types'
 
 export function useTasks() {
   const { user } = useAuth()
@@ -61,6 +61,53 @@ export function useDeleteTask() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+
+// Per-occurrence done-state for recurring tasks — non-recurring tasks keep
+// using Task.completed directly and never touch this table.
+export function useTaskCompletions() {
+  const { user } = useAuth()
+  return useQuery<TaskCompletion[]>({
+    queryKey: ['task_completions'],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('task_completions').select('*')
+      if (error) throw error
+      return (data ?? []) as TaskCompletion[]
+    },
+  })
+}
+
+export function useCompleteOccurrence() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ taskId, occurrenceDate, userId }: { taskId: string; occurrenceDate: string; userId: string }) => {
+      const { error } = await supabase
+        .from('task_completions')
+        .insert({ task_id: taskId, occurrence_date: occurrenceDate, user_id: userId })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['task_completions'] })
+    },
+  })
+}
+
+export function useUncompleteOccurrence() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ taskId, occurrenceDate }: { taskId: string; occurrenceDate: string }) => {
+      const { error } = await supabase
+        .from('task_completions')
+        .delete()
+        .eq('task_id', taskId)
+        .eq('occurrence_date', occurrenceDate)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['task_completions'] })
     },
   })
 }

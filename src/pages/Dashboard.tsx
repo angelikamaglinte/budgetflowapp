@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -75,7 +76,10 @@ export default function Dashboard() {
       <InvoiceReminderBanners
         dueReminders={dueReminders}
         onCreateInvoice={(clientName) => navigate('/invoices', { state: { prefillClientName: clientName } })}
-        onDismiss={(id) => void dismissReminder.mutateAsync(id)}
+        onDismiss={(id) => {
+          const due = dueReminders.find((d) => d.reminder.id === id)
+          if (due) void dismissReminder.mutateAsync({ id, occurrenceDate: format(due.dueDate, 'yyyy-MM-dd') })
+        }}
       />
 
       {/* Stat cards */}

@@ -19,9 +19,10 @@ import {
 import { ChevronLeft, ChevronRight, CalendarClock, CheckSquare } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useInvoiceReminders } from '@/hooks/useInvoiceReminders'
-import { useTasks } from '@/hooks/useTasks'
+import { useTasks, useTaskCompletions } from '@/hooks/useTasks'
 import { getReminderOccurrences } from '@/lib/reminders'
-import { cn, parseLocalDate } from '@/lib/utils'
+import { getOccurrences } from '@/lib/recurrence'
+import { cn } from '@/lib/utils'
 
 interface CalendarEvent {
   key: string
@@ -45,6 +46,7 @@ const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function Calendar() {
   const { data: reminders = [], isLoading: remindersLoading } = useInvoiceReminders()
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const { data: completions = [] } = useTaskCompletions()
   const isLoading = remindersLoading || tasksLoading
   const [view, setView] = useState<ViewMode>(getInitialView)
   const [anchor, setAnchor] = useState(new Date())
@@ -73,6 +75,16 @@ export default function Calendar() {
     return { rangeStart: anchor, rangeEnd: anchor, days: [anchor], title: format(anchor, 'EEEE, MMMM d, yyyy') }
   }, [view, anchor])
 
+  const completedDatesByTask = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const c of completions) {
+      const set = map.get(c.task_id) ?? new Set<string>()
+      set.add(c.occurrence_date)
+      map.set(c.task_id, set)
+    }
+    return map
+  }, [completions])
+
   const events = useMemo(() => {
     const reminderEvents: CalendarEvent[] = getReminderOccurrences(reminders, rangeStart, rangeEnd).map((occ, i) => ({
       key: `reminder-${occ.reminder.id}-${i}`,
@@ -83,17 +95,19 @@ export default function Calendar() {
     }))
     const taskEvents: CalendarEvent[] = tasks
       .filter((t) => t.due_date)
-      .map((t) => ({ date: parseLocalDate(t.due_date!), task: t }))
-      .filter((t) => t.date >= rangeStart && t.date <= rangeEnd)
-      .map(({ date, task }) => ({
-        key: `task-${task.id}`,
-        date,
-        kind: 'task' as const,
-        label: task.title,
-        completed: task.completed,
-      }))
+      .flatMap((task) => {
+        const occurrences = getOccurrences(task.recurrence_rule, task.due_date!, rangeStart, rangeEnd)
+        const completedDates = completedDatesByTask.get(task.id)
+        return occurrences.map((date) => ({
+          key: `task-${task.id}-${format(date, 'yyyy-MM-dd')}`,
+          date,
+          kind: 'task' as const,
+          label: task.title,
+          completed: task.recurrence_rule ? (completedDates?.has(format(date, 'yyyy-MM-dd')) ?? false) : task.completed,
+        }))
+      })
     return [...reminderEvents, ...taskEvents]
-  }, [reminders, tasks, rangeStart, rangeEnd])
+  }, [reminders, tasks, completedDatesByTask, rangeStart, rangeEnd])
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>()
